@@ -16,6 +16,8 @@ exports.getAll = Model => catchAsync(async (req, res, next) => {
 })
 
 exports.updateOne = Model => catchAsync( async (req, res, next)=> {
+    //new: true ==> means that we want this method to return a new document 
+    //takes the id of the doc and the modified fields from the body
     const doc = await Model.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
         runValidators: true
