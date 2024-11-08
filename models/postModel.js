@@ -33,8 +33,8 @@ const postSchema = new mongoose.Schema({
     },
     user:{
         type: mongoose.Schema.ObjectId,
-        ref: 'User',
-        required: [true, 'a post must have a user']
+        ref: 'User'
+        //required: [true, 'a post must have a user']
     }
 },{
     toJSON: {virtuals: true},
@@ -53,5 +53,5 @@ const postSchema = new mongoose.Schema({
 
 
 //build the post schema
-const Post = mongoose.Model('Post', postSchema);
+const Post = mongoose.model('Post', postSchema);
 module.exports = Post;
