@@ -16,26 +16,10 @@ exports.getAll = Model => catchAsync(async (req, res, next) => {
 })
 
 //if the performance of the update method slowed down a lot take the like functionality out to a different functions (likeOne, unlikeOne)
-exports.updateOne = (Model, action) => catchAsync( async (req, res, next)=> {
-    let updatedData = req.body;
-
-    if (action === 'increment') {
-        // Increment like
-        updatedData = {}
-        updatedData.$inc = { likes: 1 };
-        req.body = {}
-    } else if (action === 'decrement') {
-        updatedData = {}
-        // Decrement like
-        updatedData.$inc = { likes: -1 };
-        req.body = {}
-    }else if(action != 'increment' && action != 'decrement' && action != null){
-        return next(new AppError('Invalid action for likes modification', statusCode.BAD_REQUEST));
-    }
-
+exports.updateOne = Model => catchAsync( async (req, res, next)=> {
     //new: true ==> means that we want this method to return a new document 
     //takes the id of the doc and the modified fields from the body
-    const doc = await Model.findByIdAndUpdate(req.params.id, updatedData, {
+    const doc = await Model.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
         runValidators: true
     })
@@ -124,7 +108,7 @@ exports.likeOne = Model => catchAsync( async (req, res, next)=> {
 exports.unlikeOne = Model => catchAsync( async (req, res, next)=> {
 
     let updatedData = {}
-    
+
     updatedData.$inc = { likes: -1 };
     req.body = {}
 

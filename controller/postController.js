@@ -8,5 +8,5 @@ exports.updatePost = factory.updateOne(Post);
 exports.deletePost = factory.deleteOne(Post);
 exports.createPost = factory.createOne(Post);
 exports.getPostById = factory.getOne(Post);
-exports.likePost = factory.updateOne(Post, "increment")
-exports.unlikePost = factory.updateOne(Post, "decrement")
+exports.likePost = factory.likeOne(Post);
+exports.unlikePost = factory.unlikeOne(Post);
