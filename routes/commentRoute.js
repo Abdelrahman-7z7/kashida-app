@@ -12,6 +12,9 @@ router.route('/')
 router.route('/:id')
     .get(commentController.getCommentById)
     .patch(commentController.updateComment)
-    .delete(commentController.deleteComment)
+    .delete(commentController.deleteComment);
+
+router.route('/:id/like').patch(commentController.likeComment);
+router.route('/:id/unlike').patch(commentController.unlikeComment);
 
 module.exports = router;

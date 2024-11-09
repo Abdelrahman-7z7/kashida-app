@@ -15,10 +15,20 @@ exports.getAll = Model => catchAsync(async (req, res, next) => {
     })
 })
 
-exports.updateOne = Model => catchAsync( async (req, res, next)=> {
+exports.updateOne = (Model, action) => catchAsync( async (req, res, next)=> {
+    let updatedData = req.body;
+
+    if (action === 'increment') {
+        // Increment like
+        updatedData.$inc = { likes: 1 };
+    } else if (action === 'decrement') {
+        // Decrement like
+        updatedData.$inc = { likes: -1 };
+    }
+
     //new: true ==> means that we want this method to return a new document 
     //takes the id of the doc and the modified fields from the body
-    const doc = await Model.findByIdAndUpdate(req.params.id, req.body, {
+    const doc = await Model.findByIdAndUpdate(req.params.id, updatedData, {
         new: true,
         runValidators: true
     })
@@ -77,4 +87,19 @@ exports.getOne = (Model, popOptions) => catchAsync(async (req, res, next)=> {
         }
     })
 })
+
+// exports.likeOne = Model => catchAsync(async (req, res, next) => {
+//     const doc = Model.findByIdAndUpdate(req.params.id, )
+
+//     if(!doc){
+//         next(new AppError('No document found with that Id', statusCode.NOT_FOUND))
+//     }
+
+//     res.status(statusCode.SUCCESS).json({
+//         status: "success",
+//         data: {
+//             data: doc
+//         }
+//     })
+// })
 

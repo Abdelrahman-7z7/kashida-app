@@ -26,6 +26,10 @@ const postSchema = new mongoose.Schema({
         type: Date,
         default: Date.now(),
     },
+    updatedAt: {
+        type: Date,
+        default: Date.now()
+    },
     likes: {
         type: Number,
         default: 0
@@ -49,6 +53,23 @@ const postSchema = new mongoose.Schema({
 //     });
 //     next();
 // } )
+
+//handling the updating timestamps
+postSchema.pre('findOneAndUpdate', async function(next){
+    // Check if incrementLikes or decrementLikes is in the query or body
+    const updateData = this._update;
+
+    if (updateData?.$inc) {
+        // Skip updating the updatedAt field if incrementLikes or decrementLikes is true
+        return next();
+    }
+    
+    console.log('i am in 1')
+    const docToUpdate = await this.model.findOne(this.getQuery())
+    if(docToUpdate) this.set({updatedAt: new Date()})
+    next();
+})
+
 
 
 //build the post schema
