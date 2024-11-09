@@ -63,8 +63,8 @@ postSchema.pre('findOneAndUpdate', async function(next){
         // Skip updating the updatedAt field if incrementLikes or decrementLikes is true
         return next();
     }
-    
-    console.log('i am in 1')
+
+    // console.log('i am in 1')
     const docToUpdate = await this.model.findOne(this.getQuery())
     if(docToUpdate) this.set({updatedAt: new Date()})
     next();
