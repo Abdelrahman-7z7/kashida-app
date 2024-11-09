@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const postSchema = new mongoose.Schema({
     photos: {
         type: Array,
-        required: [true, "Post must have a picture"]
+        required: [true, "Post must have a picture"],
     },
     title: {
         type: String,

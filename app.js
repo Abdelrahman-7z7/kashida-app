@@ -1,5 +1,6 @@
 const express = require('express')
 const morgan = require('morgan')
+const globalErrorHandling = require('./controller/errorController')
 
 //Routes
 const postRoute = require('./routes/postRoute')
@@ -33,5 +34,10 @@ app.get('/', (req, res, next)=>{
 app.use('/api/k1/posts', postRoute);
 // app.use('/api/k1/user');
 // app.use('/api/k1/comment');
+
+//reaching this point refers to having an error
+
+// ## using global-error-handler from errorController ##
+app.use(globalErrorHandling);
 
 module.exports = app;
