@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 
 //build the post schema
-
 const postSchema = new mongoose.Schema({
     photos: {
         type: Array,
