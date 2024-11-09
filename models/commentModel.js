@@ -2,7 +2,8 @@ const mongoose = require('mongoose')
 
 const commentSchema = new mongoose.Schema({
     photo: {
-        type: Array
+        type: Array,
+        default: 'default.jpg'
     },
     comment: {
         type: String,
@@ -43,8 +44,8 @@ const commentSchema = new mongoose.Schema({
 // })
 
 //handling the updating timestamps
-commentSchema.pre('findByIdAndUpdate', async function(next){
-    const docToUpdate = await this.model.findOne(this.getQuery)
+commentSchema.pre('findOneAndUpdate', async function(next){
+    const docToUpdate = await this.model.findOne(this.getQuery())
     if(docToUpdate) this.set({updatedAt: new Date()})
     next();
 })

@@ -4,7 +4,9 @@ const globalErrorHandling = require('./controller/errorController')
 
 //Routes
 const postRoute = require('./routes/postRoute')
+const commentRoute = require('./routes/commentRoute')
 
+// Express app setup
 const app = express()
 
 //middleware to parse JSON request bodies
@@ -17,10 +19,10 @@ if(process.env.NODE_ENV.trim() === 'development'){
 
 
 //testing purposes
-app.get('/', (req, res, next)=>{
-    res.json({ message: 'Welcome to the Express API!' })
-    next();
-})
+// app.get('/', (req, res, next)=>{
+//     res.json({ message: 'Welcome to the Express API!' })
+//     next();
+// })
 
 
 
@@ -32,11 +34,10 @@ app.get('/', (req, res, next)=>{
 // })
 
 app.use('/api/k1/posts', postRoute);
+app.use('/api/k1/comments', commentRoute);
 // app.use('/api/k1/user');
-// app.use('/api/k1/comment');
 
 //reaching this point refers to having an error
-
 // ## using global-error-handler from errorController ##
 app.use(globalErrorHandling);
 
