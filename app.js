@@ -5,6 +5,7 @@ const globalErrorHandling = require('./controller/errorController')
 //Routes
 const postRoute = require('./routes/postRoute')
 const commentRoute = require('./routes/commentRoute')
+const replyRoute = require('./routes/replyRoute')
 
 // Express app setup
 const app = express()
@@ -35,6 +36,7 @@ if(process.env.NODE_ENV.trim() === 'development'){
 
 app.use('/api/k1/posts', postRoute);
 app.use('/api/k1/comments', commentRoute);
+app.use('/api/k1/replies', replyRoute);
 // app.use('/api/k1/user');
 
 //reaching this point refers to having an error

@@ -5,7 +5,7 @@ const replySchema = new mongoose.Schema({
         type: String,
         required: [true, 'a replay can not be empty']
     },
-    like: {
+    likes: {
         type: Number,
         default: 0
     },
@@ -16,7 +16,7 @@ const replySchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.ObjectId,
         ref: 'User',
-        required: [true, 'A reply must belong to user']
+        // required: [true, 'A reply must belong to user']
     },
     comment: {
         type: mongoose.Schema.ObjectId,

@@ -15,15 +15,22 @@ exports.getAll = Model => catchAsync(async (req, res, next) => {
     })
 })
 
+//if the performance of the update method slowed down a lot take the like functionality out to a different functions (likeOne, unlikeOne)
 exports.updateOne = (Model, action) => catchAsync( async (req, res, next)=> {
     let updatedData = req.body;
 
     if (action === 'increment') {
         // Increment like
+        updatedData = {}
         updatedData.$inc = { likes: 1 };
+        req.body = {}
     } else if (action === 'decrement') {
+        updatedData = {}
         // Decrement like
         updatedData.$inc = { likes: -1 };
+        req.body = {}
+    }else if(action != 'increment' && action != 'decrement' && action != null){
+        return next(new AppError('Invalid action for likes modification', statusCode.BAD_REQUEST));
     }
 
     //new: true ==> means that we want this method to return a new document 
@@ -75,6 +82,58 @@ exports.getOne = (Model, popOptions) => catchAsync(async (req, res, next)=> {
     if(popOptions) query = query.populate(popOptions);
     
     const doc = await query;
+
+    if(!doc){
+        next(new AppError('No document found with that Id', statusCode.NOT_FOUND))
+    }
+
+    res.status(statusCode.SUCCESS).json({
+        status: "success",
+        data: {
+            data: doc
+        }
+    })
+})
+
+exports.likeOne = Model => catchAsync( async (req, res, next)=> {
+
+    let updatedData = {}
+    updatedData.$inc = { likes: 1 };
+    req.body = {}
+
+    //new: true ==> means that we want this method to return a new document 
+    //takes the id of the doc and the modified fields from the body
+    const doc = await Model.findByIdAndUpdate(req.params.id, updatedData, {
+        new: true,
+        runValidators: true
+    })
+
+    if(!doc){
+        next(new AppError('No document found with that Id', statusCode.NOT_FOUND))
+    }
+
+    res.status(statusCode.SUCCESS).json({
+        status: "success",
+        data: {
+            data: doc
+        }
+    })
+})
+
+
+exports.unlikeOne = Model => catchAsync( async (req, res, next)=> {
+
+    let updatedData = {}
+    
+    updatedData.$inc = { likes: -1 };
+    req.body = {}
+
+    //new: true ==> means that we want this method to return a new document 
+    //takes the id of the doc and the modified fields from the body
+    const doc = await Model.findByIdAndUpdate(req.params.id, updatedData, {
+        new: true,
+        runValidators: true
+    })
 
     if(!doc){
         next(new AppError('No document found with that Id', statusCode.NOT_FOUND))
