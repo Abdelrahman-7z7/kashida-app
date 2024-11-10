@@ -6,6 +6,7 @@ const globalErrorHandling = require('./controller/errorController')
 const postRoute = require('./routes/postRoute')
 const commentRoute = require('./routes/commentRoute')
 const replyRoute = require('./routes/replyRoute')
+const userRoute = require('./routes/userRoute')
 
 // Express app setup
 const app = express()
@@ -37,7 +38,7 @@ if(process.env.NODE_ENV.trim() === 'development'){
 app.use('/api/k1/posts', postRoute);
 app.use('/api/k1/comments', commentRoute);
 app.use('/api/k1/replies', replyRoute);
-// app.use('/api/k1/user');
+app.use('/api/k1/users', userRoute);
 
 //reaching this point refers to having an error
 // ## using global-error-handler from errorController ##
