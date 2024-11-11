@@ -2,9 +2,12 @@ const express = require('express')
 
 //controller
 const postController = require('../controller/postController')
+const authController = require('../controller/authController')
 
 const router = express.Router();
 
+//Middleware => protecting the following route
+router.use(authController.protect)
 
 router.route('/')
     .get(postController.getAllPost)

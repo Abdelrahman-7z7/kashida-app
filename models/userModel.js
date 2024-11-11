@@ -1,13 +1,20 @@
 const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcryptjs')
+const crypto = require('crypto')
 
 const userSchema = new mongoose.Schema({
     username: {
         type: String,
         required: [true, 'A user must have a username'],
         unique: [true, 'A user must have a unique username'],
-        trim: true
+        trim: true,
+        validate: {
+            validator: function(username) {
+                return /^[a-z0-9._-]+$/.test(username);  // Only lowercase letters, numbers, ., _, and -
+            },
+            message: 'Username can only contain lowercase letters, numbers, underscores (_), hyphens (-), or dots (.) without spaces'
+        }
     },
     email: {
         type: String,
@@ -15,7 +22,7 @@ const userSchema = new mongoose.Schema({
         unique: [true, 'A user must have a unique email'],
         lowercase: true,
         trim: true,
-        validate: [validator.isEmail]
+        validate: [validator.isEmail, 'Please provide a valid email...']
     },
     password: {
         type: String,
@@ -37,9 +44,10 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: Date.now()
     },
+    passwordResetToken: String,
+    passwordResetExpires: Date,
     name: {
-        type: String,
-        default: ""
+        type: String
     },
     photo: {
         type: String,
@@ -47,8 +55,8 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['user', 'admin', 'student', 'teacher'],
-        default: 'user'
+        enum: ['admin', 'student', 'teacher'],
+        default: 'student'
     },
     active: {
         type: Boolean,
@@ -57,6 +65,7 @@ const userSchema = new mongoose.Schema({
     }
 })
 
+
 // middleware: hashing password before saving
 userSchema.pre('save', async function(next){
     //only run this function if the password was actually modified
@@ -64,11 +73,25 @@ userSchema.pre('save', async function(next){
     
     //hash the password with cost 12 (CPU intensive) and replace the plain text password with the hashed one
     this.password = await bcrypt.hash(this.password, 12)
-
+    
     // deleting the passwordConfirm, only need it for the validation above
     this.passwordConfirm = undefined;
     next();
 })
+
+//Middleware: setting the default for name
+userSchema.pre('save', function(next){
+    if(!this.name){
+        this.name = this.username
+    }
+    next();
+})
+
+//Middleware: eliminating the inactive users from being listed out in the get all users
+userSchema.pre(/^find/, function(next){
+    this.find({active: {$ne: false}})
+    next();
+}) 
 
 // instance method => validating the Password
 userSchema.methods.correctPassword = async function(candidatePassword, userPassword){
@@ -89,6 +112,24 @@ userSchema.methods.changedPasswordAfter = function(JWTTimestamp){
 
     //false => DID NOT CHANGE
     return false;
+}
+
+// instance method => generate random reset token
+userSchema.methods.createPasswordResetToken = function(){
+    // 1) generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    // 2) using sha256 algorithm for hashing to be stored securely in the database
+    this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    
+    // 3) setting the expiry date after 5 minutes
+    this.passwordResetExpires = Date.now() + 5 * 60 * 1000;
+
+    // 4) testing if the resetToken stored as a hashed token
+    console.log({resetToken}, this.passwordResetToken);
+
+    // 5) return the resetToken
+    return resetToken;
 }
 
 const User = mongoose.model('User', userSchema);
