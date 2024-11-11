@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken')
 const crypto = require('crypto')
 const {promisify} = require('util')
 const sendEmail = require('../utils/email')
+
 //import model
 const User = require('../models/userModel')
 
@@ -197,4 +198,36 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
         // 14) returning the error
         return next(new AppError('There was an error sending the email. Please try again later!!', 500))
     }
+})
+
+
+// resetting password
+exports.resetPassword = catchAsync(async (req, res, next) => {
+    // 1) get the token
+    const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex')
+    
+    // 2) get the user by the token
+    const user = await User.findOne({
+        passwordResetToken: hashedToken,
+        passwordResetExpires: {$gt: Date.now()}
+    })
+
+    // 3) check if the user exists
+    if(!user){
+        return next(new AppError('Token is invalid or has expired', 400))
+    }
+    
+    // 4) get the user password and password confirm
+    user.password = req.body.password;
+    user.passwordConfirm = req.body.passwordConfirm;
+    
+    // 5) set the passwordResetToken & passwordResetExpires to undefined
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+
+    // 6) save user
+    await user.save()
+
+    // 7) create the token
+    createSendToken(user, 200, res)
 })
