@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken')
 const crypto = require('crypto')
 const {promisify} = require('util')
 const sendEmail = require('../utils/email')
+const validator = require('validator')
 
 //import model
 const User = require('../models/userModel')

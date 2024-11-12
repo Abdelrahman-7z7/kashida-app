@@ -53,6 +53,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: 'default.jpg'
     },
+    bio: {
+        type: String,
+        default: ""
+    },
     role: {
         type: String,
         enum: ['admin', 'student', 'teacher'],
