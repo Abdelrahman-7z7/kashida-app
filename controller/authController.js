@@ -253,3 +253,29 @@ exports.updatePassword = catchAsync(async (req, res, next)=> {
     // 5) create and send the token => log user in and sent JWT 
     createSendToken(user, 200, res)
 })
+
+//for updating the email since it is a sensitive data where the hacker can change it and reach to the forgotPassword method
+exports.updateEmail = catchAsync(async (req, res, next) => {
+
+    // 1) getting the current user => using the req.user coming from the protected route
+    const user = await User.findById(req.user.id).select('+password')
+
+    // 2) check if the current password POSTed in the request is correct
+    if(!(await user.correctPassword(req.body.passwordCurrent, user.password))){
+        return next(new AppError('Incorrect current password', 401))
+    }
+
+    // 3) update the user's email
+    user.email = req.body.email;
+    
+    // 4) validate the email before sending since we want to escape passwordConfirm by the validateBeforeSave: false
+    if (!/^\S+@\S+\.\S+$/.test(user.email)) {
+        return next(new AppError('Please provide a valid email address', 400));
+    }
+
+    // 5) save the changes
+    await user.save({validateBeforeSave: false});
+
+    // 6) create and send the token => log user in and sent JWT
+    createSendToken(user, 200, res);
+})
