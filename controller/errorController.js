@@ -24,6 +24,18 @@ const handlingDuplicatedFieldsDB = err => {
     return new AppError(message, 400);
 }
 
+//handling invalid signature
+const handlingJWTError = () => {
+    const message = 'Invalid token, Please login again...'
+    return (new AppError(message, 401))
+}
+
+//handling token expired
+const handlingJWTExpiredError = () => {
+    const message = 'Token expired, Please login again...'
+    return (new AppError(message, 401));
+}
+
 
 //handling production env error
 const sendErrorProd = (err, res) => {
@@ -85,6 +97,12 @@ module.exports = (err, req, res, next) => {
 
         //handling duplicated fields
         if(error.code === 11000 ) error = handlingDuplicatedFieldsDB(err, res);
+
+        //handling invalid signature
+        if(error.name === "JsonWebTokenError") error = handlingJWTError(err, res);
+
+        //handling expires token
+        if(error.name === "TokenExpiredError") error = handlingJWTExpiredError(err, res);
         
         //sending the caught error from production mode
         sendErrorProd(error, res)
