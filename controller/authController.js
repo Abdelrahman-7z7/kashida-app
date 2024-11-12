@@ -231,3 +231,24 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     // 7) create the token
     createSendToken(user, 200, res)
 })
+
+// updating the logged in user's password without needing to forgot it in the first place
+exports.updatePassword = catchAsync(async (req, res, next)=> {
+    // 1) getting the current user => using the req.user coming from the protected route
+    const user = await User.findById(req.user.id).select('+password')
+
+    // 2) Check if the POSTed current password is correct
+    if(!(await user.correctPassword(req.body.passwordCurrent, user.password))){
+        return next(new AppError('Incorrect current password', 401))
+    }
+    
+    // 3) if so update the user
+    user.password = req.body.password;
+    user.passwordConfirm = req.body.passwordConfirm;
+
+    // 4) save the changes
+    await user.save()
+
+    // 5) create and send the token => log user in and sent JWT 
+    createSendToken(user, 200, res)
+})
