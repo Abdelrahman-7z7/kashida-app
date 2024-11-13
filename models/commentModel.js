@@ -45,15 +45,6 @@ const commentSchema = new mongoose.Schema({
 
 //handling the updating timestamps
 commentSchema.pre('findOneAndUpdate', async function(next){
-    // Check if incrementLikes or decrementLikes is in the query or body
-    const updateData = this._update;
-
-    if (updateData?.$inc) {
-        // Skip updating the updatedAt field if incrementLikes or decrementLikes is true
-        return next();
-    }
-    
-    console.log('i am in 1')
     const docToUpdate = await this.model.findOne(this.getQuery())
     if(docToUpdate) this.set({updatedAt: new Date()})
     next();

@@ -131,18 +131,3 @@ exports.unlikeOne = Model => catchAsync( async (req, res, next)=> {
     })
 })
 
-// exports.likeOne = Model => catchAsync(async (req, res, next) => {
-//     const doc = Model.findByIdAndUpdate(req.params.id, )
-
-//     if(!doc){
-//         next(new AppError('No document found with that Id', statusCode.NOT_FOUND))
-//     }
-
-//     res.status(statusCode.SUCCESS).json({
-//         status: "success",
-//         data: {
-//             data: doc
-//         }
-//     })
-// })
-

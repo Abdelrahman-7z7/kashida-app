@@ -22,6 +22,10 @@ const replySchema = new mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         ref: 'Comment',
         required: [true, 'A reply must belong to a comment']
+    },
+    likes: {
+        type: Number,
+        default: 0
     }
 })
 

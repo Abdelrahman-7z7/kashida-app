@@ -26,7 +26,7 @@ const likedBySchema = new mongoose.Schema({
 //Ensure each user can like a specific item only once
 likedBySchema.index({userId: 1, postId: 1}, {unique: true});
 likedBySchema.index({userId: 1, commentId: 1}, {unique: true});
-likedBySchema.index({userId: 1, replyId: 1}, {unique: true})
+likedBySchema.index({userId: 1, replyId: 1}, {unique: true});
 
 const LikedBy = mongoose.model('LikedBy', likedBySchema);
 module.exports = LikedBy;
