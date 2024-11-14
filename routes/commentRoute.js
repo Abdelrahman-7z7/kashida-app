@@ -1,9 +1,16 @@
 const express = require('express')
+
+//likedBy route 
+const likedByRoute = require('./likedByRoute')
+
 //controller
 const commentController = require('../controller/commentController')
 
 //init the app
 const router = express.Router();
+
+//Middleware for handling a nested likedBy route
+router.use('/:id/', likedByRoute)
 
 router.route('/')
     .get(commentController.getAllComments)

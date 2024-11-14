@@ -1,32 +1,61 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
-const likedBySchema = new mongoose.Schema({
-    userId: {
+const postLikeSchema = new mongoose.Schema({
+    userId:{
         type: mongoose.Schema.ObjectId,
-        ref: 'User'
+        ref: 'User',
     },
-    postId: {
+    postId:{
         type: mongoose.Schema.ObjectId,
-        ref: 'Post'
-    },
-    commentId: {
-        type: mongoose.Schema.ObjectId,
-        ref: 'Comment'
-    },
-    replyId: {
-        type: mongoose.Schema.ObjectId,
-        ref: 'Reply'
+        ref: 'Post',
     },
     createdAt: {
         type: Date,
-        default: Date.now
-    }
+        default: Date.now,
+    },
 })
 
-//Ensure each user can like a specific item only once
-likedBySchema.index({userId: 1, postId: 1}, {unique: true});
-likedBySchema.index({userId: 1, commentId: 1}, {unique: true});
-likedBySchema.index({userId: 1, replyId: 1}, {unique: true});
+const commentLikeSchema = new mongoose.Schema({
+    userId:{
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+    },
+    commentId:{
+        type: mongoose.Schema.ObjectId,
+        ref: 'Comment',
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+    },
+})
 
-const LikedBy = mongoose.model('LikedBy', likedBySchema);
-module.exports = LikedBy;
+const replyLikeSchema = new mongoose.Schema({
+    userId:{
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+    },
+    replyId:{
+        type: mongoose.Schema.ObjectId,
+        ref: 'Reply',
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+    },
+})
+
+postLikeSchema.index({postId: 1, userId: 1}, {unique: true})
+commentLikeSchema.index({commentId: 1, userId: 1}, {unique: true})
+replyLikeSchema.index({replyId: 1, userId: 1}, {unique: true})
+
+const PostLikes = mongoose.model('PostLikes', postLikeSchema)
+const CommentLikes = mongoose.model('CommentLikes', commentLikeSchema);
+const ReplyLikes = mongoose.model('ReplyLikes', replyLikeSchema);
+
+// Export the models for use in other parts of your application
+module.exports = {
+    PostLikes,
+    CommentLikes,
+    ReplyLikes,
+}

@@ -1,26 +1,29 @@
-const LikedBy = require('../models/likedByModel');
+const {PostLikes, CommentLikes, ReplyLikes} = require('../models/likedByModel');
 const AppError = require('../utils/appError');
 const Post = require('../models/postModel')
 const Comment = require('../models/commentModel')
 const Reply = require('../models/replyModel')
+const catchAsync = require('../utils/catchAsync')
+//helping for testing
+const factory = require('./handlerFactory')
 
 //like post
-exports.likePost = catchAsync (async (req, res, next) => {
+exports.likePost = catchAsync(async (req, res, next) => {
     // 1) get the user and the post Id
     const userId = req.user.id;
-    const {postId} = req.body;
+    const postId = req.params.id;
 
     // 2) check if the like exists
-    const existingLike = await LikedBy.findOne({postId: postId, userId: userId});
+    const existingLike = await PostLikes.findOne({postId: postId, userId: userId});
     if(existingLike){
         return next(new AppError('You have already liked this message', 400));
     }
 
     // 3) if not, create the like 
-    await LikedBy.create({postId: postId, userId: userId});
+    await PostLikes.create({postId: postId, userId: userId});
 
     // 4) increment like count on the post
-    await Post.findById(postId, {$inc: {likes: 1}})
+    await Post.findByIdAndUpdate(postId, {$inc: {likes: 1}})
 
     // 5) send response
     res.status(201).json({
@@ -33,10 +36,10 @@ exports.likePost = catchAsync (async (req, res, next) => {
 exports.unlikePost = catchAsync(async (req, res, next) => {
     // 1) get the postId and the userId
     const userId = req.user.id;
-    const {postId} = req.body;
+    const postId = req.params.id;
 
     // 2) remove like from the likedBy model
-    const deleteLike = await LikedBy.findOneAndDelete({postId: postId, userId: userId})
+    const deleteLike = await PostLikes.findOneAndDelete({postId: postId, userId: userId})
     
     // 3) check if the delete doesn't exists
     if(!deleteLike){
@@ -57,24 +60,24 @@ exports.unlikePost = catchAsync(async (req, res, next) => {
 exports.likeComment = catchAsync (async (req, res, next) => {
     // 1) get the user and the comment Id
     const userId = req.user.id;
-    const {commentId} = req.body;
+    const commentId = req.params.id;
 
     // 2) check if the like exists
-    const existingLike = await LikedBy.findOne({commentId: commentId, userId: userId});
+    const existingLike = await CommentLikes.findOne({commentId: commentId, userId: userId});
     if(existingLike){
-        return next(new AppError('You have already liked this message', 400));
+        return next(new AppError('You have already liked this comment', 400));
     }
 
     // 3) if not, create the like 
-    await LikedBy.create({commentId: commentId, userId: userId});
+    await CommentLikes.create({commentId: commentId, userId: userId});
 
     // 4) increment like count on the comment
-    await Comment.findById(commentId, {$inc: {likes: 1}})
+    await Comment.findByIdAndUpdate(commentId, {$inc: {likes: 1}})
 
     // 5) send response
     res.status(201).json({
         status: 'success',
-        message: 'Liked post successfully'
+        message: 'Liked Comment successfully'
     })
 })
 
@@ -82,14 +85,14 @@ exports.likeComment = catchAsync (async (req, res, next) => {
 exports.unlikeComment = catchAsync(async (req, res, next) => {
     // 1) get the commentId and the userId
     const userId = req.user.id;
-    const {commentId} = req.body;
+    const commentId = req.params.id;
 
     // 2) remove like from the likedBy model
-    const deleteLike = await LikedBy.findOneAndDelete({commentId: commentId, userId: userId})
+    const deleteLike = await CommentLikes.findOneAndDelete({commentId: commentId, userId: userId})
     
     // 3) check if the delete doesn't exists
     if(!deleteLike){
-        return next(new AppError('You have not liked this post', 400))
+        return next(new AppError('You have not liked this comment', 400))
     }
 
     // 4) likes decrement
@@ -98,7 +101,7 @@ exports.unlikeComment = catchAsync(async (req, res, next) => {
     // 5) send response
     res.status(200).json({
         status: 'success',
-        message: 'Post unliked successfully'
+        message: 'Comment unliked successfully'
     })
 })
 
@@ -106,39 +109,39 @@ exports.unlikeComment = catchAsync(async (req, res, next) => {
 exports.likeReply = catchAsync (async (req, res, next) => {
     // 1) get the user and the reply Id
     const userId = req.user.id;
-    const {replyId} = req.body;
+    const replyId = req.params.id;
 
     // 2) check if the like exists
-    const existingLike = await LikedBy.findOne({replyId: replyId, userId: userId});
+    const existingLike = await ReplyLikes.findOne({replyId: replyId, userId: userId});
     if(existingLike){
-        return next(new AppError('You have already liked this message', 400));
+        return next(new AppError('You have already liked this reply', 400));
     }
 
     // 3) if not, create the like 
-    await LikedBy.create({replyId: replyId, userId: userId});
+    await ReplyLikes.create({replyId: replyId, userId: userId});
 
     // 4) increment like count on the reply
-    await Reply.findById(replyId, {$inc: {likes: 1}})
+    await Reply.findByIdAndUpdate(replyId, {$inc: {likes: 1}})
 
     // 5) send response
     res.status(201).json({
         status: 'success',
-        message: 'Liked post successfully'
+        message: 'Like Reply successfully'
     })
 })
 
 //unlike Reply
-exports.unlikeComment = catchAsync(async (req, res, next) => {
+exports.unlikeReply = catchAsync(async (req, res, next) => {
     // 1) get the replyId and the userId
     const userId = req.user.id;
-    const {replyId} = req.body;
+    const replyId = req.params.id;
 
     // 2) remove like from the likedBy model
-    const deleteLike = await LikedBy.findOneAndDelete({replyId: replyId, userId: userId})
+    const deleteLike = await ReplyLikes.findOneAndDelete({replyId: replyId, userId: userId})
     
     // 3) check if the delete doesn't exists
     if(!deleteLike){
-        return next(new AppError('You have not liked this post', 400))
+        return next(new AppError('You have not liked this reply', 400))
     }
 
     // 4) likes decrement
@@ -147,6 +150,13 @@ exports.unlikeComment = catchAsync(async (req, res, next) => {
     // 5) send response
     res.status(200).json({
         status: 'success',
-        message: 'Post unliked successfully'
+        message: 'Reply unliked successfully'
     })
 })
+
+//get all likes
+exports.getAllPostLikes = factory.getAll(PostLikes);
+exports.getAllCommentLikes = factory.getAll(CommentLikes);
+exports.getAllReplyLikes = factory.getAll(ReplyLikes);
+
+
