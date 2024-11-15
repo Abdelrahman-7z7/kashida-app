@@ -5,10 +5,12 @@ const likedByRoute = require('./likedByRoute')
 
 //controller
 const commentController = require('../controller/commentController')
+const authController = require('../controller/authController')
 
 //init the app
 const router = express.Router();
 
+router.use(authController.protect)
 //Middleware for handling a nested likedBy route
 router.use('/:id/', likedByRoute)
 

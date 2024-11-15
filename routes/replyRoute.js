@@ -5,8 +5,12 @@ const likedByRoute = require('./likedByRoute')
 
 //controllers
 const replyController = require('../controller/replyController')
+const authController = require('../controller/authController')
 
 const router = express.Router()
+
+//Middleware for handling authentication
+router.use(authController.protect)
 
 //Middleware for handling a nested likedBy route
 router.use('/:id/', likedByRoute)
