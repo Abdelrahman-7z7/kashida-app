@@ -19,9 +19,7 @@ router.route('/:id')
     .get(replyController.getReplyById)
     .patch(replyController.updateReply)
     .delete(replyController.deleteReply)
-    
-router.patch('/:id/like', replyController.likeReply)
-router.patch('/:id/unlike', replyController.unlikeReply)
+
 
 
 module.exports = router;

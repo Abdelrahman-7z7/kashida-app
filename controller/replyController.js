@@ -6,5 +6,3 @@ exports.createReply = factory.createOne(Reply);
 exports.updateReply = factory.updateOne(Reply);
 exports.deleteReply = factory.deleteOne(Reply);
 exports.getReplyById = factory.getOne(Reply);
-exports.likeReply = factory.likeOne(Reply);
-exports.unlikeReply = factory.unlikeOne(Reply);

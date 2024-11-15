@@ -24,8 +24,6 @@ router.route('/:id')
     .patch(postController.updatePost)
     .delete(postController.deletePost);
 
-router.patch('/:id/like', postController.likePost);
-router.patch('/:id/unlike', postController.unlikePost);
 
 
 module.exports = router;

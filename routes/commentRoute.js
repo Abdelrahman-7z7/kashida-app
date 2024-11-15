@@ -21,7 +21,5 @@ router.route('/:id')
     .patch(commentController.updateComment)
     .delete(commentController.deleteComment);
 
-router.patch('/:id/like', commentController.likeComment);
-router.patch('/:id/unlike', commentController.unlikeComment);
 
 module.exports = router;
