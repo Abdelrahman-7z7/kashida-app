@@ -11,7 +11,7 @@ class APIFeatures{
         //since we might have some query that is not in the document we have to filter out before sending it
         //the three dots in here basically take all the fields and filter it out of the object, and {} creates a new Object
         //ex: /api/k1/posts?categories=Naskh&page=2
-        const queryObj = {...this.query}
+        const queryObj = {...this.queryString}
         const excludeFields = ['page', 'sort', 'limit', 'fields']
         excludeFields.forEach(field => delete queryObj[field])
 
@@ -19,11 +19,23 @@ class APIFeatures{
         // ex: 127.0.0.1:8000/api/v1/posts?tags=lifeoutside&duration[gte]=5
         // gte (greater than or equal), gt, lte (less than or equal), lt
         //filter obj {difficulty: 'difficult, duration: { $gte: 5} } ==> which means >= than 5 ==> In mongoDB
-        let queryString = JSON.stringify(queryObj)
-        queryString = queryString.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`)
+
+         // Handle categories as an array for $in
+        if (queryObj.categories) {
+            const categoriesArray = queryObj.categories.split(',');
+            queryObj.categories = { $in: categoriesArray };
+        }
+
+        // Handle description query
+        if (queryObj.description) {
+            queryObj.description = { $regex: queryObj.description, $options: 'i' }; // 'i' for case-insensitive search
+        }
+
+        let queryStr = JSON.stringify(queryObj)
+        queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`)
 
         //we filter out the data from the posts etc. models before we sending its query
-        this.query = this.query.find(JSON.parse(queryObj))
+        this.query = this.query.find(JSON.parse(queryStr))
         
         //returning the entire object
         return this

@@ -10,7 +10,7 @@ const authController = require('../controller/authController')
 const router = express.Router();
 
 //Middleware for handling a nested likedBy route
-router.use('/:id/', likedByRoute)
+router.use('/:postId/', likedByRoute)
 
 //Middleware => protecting the following route
 router.use(authController.protect)

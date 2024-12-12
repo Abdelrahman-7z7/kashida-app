@@ -11,7 +11,7 @@ const factory = require('./handlerFactory')
 exports.likePost = catchAsync(async (req, res, next) => {
     // 1) get the user and the post Id
     const userId = req.user.id;
-    const postId = req.params.id;
+    const postId = req.params.postId;
 
     // 2) check if the like exists
     const existingLike = await PostLikes.findOne({postId: postId, userId: userId});
@@ -36,7 +36,7 @@ exports.likePost = catchAsync(async (req, res, next) => {
 exports.unlikePost = catchAsync(async (req, res, next) => {
     // 1) get the postId and the userId
     const userId = req.user.id;
-    const postId = req.params.id;
+    const postId = req.params.postId;
 
     // 2) remove like from the likedBy model
     const deleteLike = await PostLikes.findOneAndDelete({postId: postId, userId: userId})
@@ -60,7 +60,7 @@ exports.unlikePost = catchAsync(async (req, res, next) => {
 exports.likeComment = catchAsync (async (req, res, next) => {
     // 1) get the user and the comment Id
     const userId = req.user.id;
-    const commentId = req.params.id;
+    const commentId = req.params.postId;
 
     // 2) check if the like exists
     const existingLike = await CommentLikes.findOne({commentId: commentId, userId: userId});
@@ -85,7 +85,7 @@ exports.likeComment = catchAsync (async (req, res, next) => {
 exports.unlikeComment = catchAsync(async (req, res, next) => {
     // 1) get the commentId and the userId
     const userId = req.user.id;
-    const commentId = req.params.id;
+    const commentId = req.params.postId;
 
     // 2) remove like from the likedBy model
     const deleteLike = await CommentLikes.findOneAndDelete({commentId: commentId, userId: userId})
@@ -109,7 +109,7 @@ exports.unlikeComment = catchAsync(async (req, res, next) => {
 exports.likeReply = catchAsync (async (req, res, next) => {
     // 1) get the user and the reply Id
     const userId = req.user.id;
-    const replyId = req.params.id;
+    const replyId = req.params.postId;
 
     // 2) check if the like exists
     const existingLike = await ReplyLikes.findOne({replyId: replyId, userId: userId});
@@ -134,7 +134,7 @@ exports.likeReply = catchAsync (async (req, res, next) => {
 exports.unlikeReply = catchAsync(async (req, res, next) => {
     // 1) get the replyId and the userId
     const userId = req.user.id;
-    const replyId = req.params.id;
+    const replyId = req.params.postId;
 
     // 2) remove like from the likedBy model
     const deleteLike = await ReplyLikes.findOneAndDelete({replyId: replyId, userId: userId})
