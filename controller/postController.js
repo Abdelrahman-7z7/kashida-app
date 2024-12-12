@@ -4,11 +4,33 @@ const {PostLikes} = require('../models/likedByModel');
 const catchAsync = require('../utils/catchAsync');
 const mongoose = require('mongoose')
 const AppError = require('../utils/appError')
+const User = require('../models/userModel')
 
+
+//middleware for setting the user and tour id
+exports.setUserId = (req, res, next) => {
+    //from the protect middleware
+    if(!req.body.user) req.body.user = req.user.id;
+    next();
+}
 
 exports.updatePost = factory.updateOne(Post);
 exports.deletePost = factory.deleteOne(Post);
+
 exports.createPost = factory.createOne(Post);
+
+// catchAsync( async (req, res, next)=> {
+//     const post = await Model.create(req.body);
+//     const user = await User.findById(req.user.id)
+
+
+//     res.status(statusCode.CREATED).json({
+//         status: 'success',
+//         data: {
+//             data: doc
+//         }
+//     })
+// });
 
 //get all post
 // exports.getAllPost = factory.getAll(Post, PostLikes);
@@ -124,3 +146,4 @@ exports.getPostById = catchAsync(async (req, res, next) => {
         },
     });
 });
+

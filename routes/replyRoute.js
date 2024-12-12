@@ -24,6 +24,4 @@ router.route('/:id')
     .patch(replyController.updateReply)
     .delete(replyController.deleteReply)
 
-
-
 module.exports = router;

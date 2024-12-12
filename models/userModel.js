@@ -66,6 +66,18 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: true,
         select: false
+    },
+    followers: {
+        type: Number,
+        default: 0
+    },
+    following: {
+        type: Number,
+        default: 0
+    },
+    posts:{
+        type: Number,
+        default: 0
     }
 })
 

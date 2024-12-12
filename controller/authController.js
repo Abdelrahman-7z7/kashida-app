@@ -36,7 +36,8 @@ const createSendToken = (user, statusCode, res) => {
         // 2) prevent accessing to document.cookie to reduce the risk of XXS (Cross-site-scripting) 
         httpOnly: true,
         // 3) in production mode, set secure option to true, ensure that the cookie can only be sent over HTTPS
-        secure: process.env.NODE_ENV.trim() === 'production'? true: false
+        // secure: process.env.NODE_ENV.trim() === 'production'? true: false
+        secure: process.env.NODE_ENV === 'production'
     }
 
     // 4) sending the cookie along with the token
@@ -278,4 +279,16 @@ exports.updateEmail = catchAsync(async (req, res, next) => {
 
     // 6) create and send the token => log user in and sent JWT
     createSendToken(user, 200, res);
+})
+
+//verifying email
+exports.verifyEmail = catchAsync(async (req, res, next) => {
+    // 1) fetch the user data
+    // 2) check the user Id
+    // 3) throw an error if !user
+    // 4) get the email address 
+    // 5) send an email message with the token involved
+    // 6) check if the token is valid and not expired
+    // 7) if so then we update the email address and set the token and the expiration to undefined
+    // 8) save the user and send the response
 })

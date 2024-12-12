@@ -17,12 +17,12 @@ router.use(authController.protect)
 
 router.route('/')
     .get(postController.getAllPost)
-    .post(postController.createPost);
+    .post(postController.setUserId, postController.createPost);
 
 router.route('/:id')
     .get(postController.getPostById)
     .patch(postController.updatePost)
-    .delete(postController.deletePost);
+    .delete(postController.setUserId, postController.deletePost);
 
 
 

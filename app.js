@@ -12,6 +12,7 @@ const LikedByRoute = require('./routes/likedByRoute')
 // Express app setup
 const app = express()
 
+
 //middleware to parse JSON request bodies
 app.use(express.json())
 

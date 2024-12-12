@@ -2,6 +2,7 @@ const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError")
 const statusCode = require("../utils/statusCode");
 const { Model } = require("mongoose");
+const User = require('../models/userModel')
 
 exports.getAll = Model => catchAsync(async (req, res, next) => {
     const doc = await Model.find();
@@ -103,8 +104,11 @@ exports.deleteOne = Model => catchAsync(async (req, res, next) => {
 })
 
 exports.createOne = Model => catchAsync(async (req, res, next) => {
-    const doc = await Model.create(req.body);
+    // Ensure the user ID is passed to the post
+    req.body.user = req.user.id;
     
+    const doc = await Model.create(req.body);
+
     res.status(statusCode.CREATED).json({
         status: 'success',
         data: {

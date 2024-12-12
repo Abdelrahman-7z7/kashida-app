@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const User = require('../models/userModel')
 
 //build the post schema
 const postSchema = new mongoose.Schema({
@@ -36,8 +37,8 @@ const postSchema = new mongoose.Schema({
     },
     user:{
         type: mongoose.Schema.ObjectId,
-        ref: 'User'
-        //required: [true, 'a post must have a user']
+        ref: 'User',
+        required: [true, 'A post must belong to a user']
     }
 },{
     toJSON: {virtuals: true},
@@ -46,13 +47,34 @@ const postSchema = new mongoose.Schema({
 
 //turned on when we implement the user model
 // populate the user (Using a document middleware) pre save to be stored with the post
-// postSchema.pre(/^find/, function(next){
-//     this.populate({
-//         path: 'user',
-//         select: 'username photo'
-//     });
-//     next();
-// } )
+postSchema.pre(/^find/, function(next){
+    this.populate({
+        path: 'user',
+        select: 'username photo'
+    });
+    next();
+})
+
+//Ensure that the user id is saved and handling user posts count
+postSchema.pre('save', async function(next){
+    const doc = this;
+
+    // Ensure this is a new document
+    if (!doc.isNew) return next();
+
+    // Find the user by the ID in `doc.user`
+    const user = await User.findById(doc.user);
+
+    if (!user) {
+        return next(new Error('User not found')); // Handle cases where the user is missing
+    }
+
+    // Increment the user's posts count
+    user.set({ posts: user.posts + 1 });
+    await user.save({ validateBeforeSave: false });
+    
+    next();
+})
 
 //handling the updating timestamps
 postSchema.pre('findOneAndUpdate', async function(next){
