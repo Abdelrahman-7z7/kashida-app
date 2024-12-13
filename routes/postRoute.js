@@ -6,6 +6,7 @@ const likedByRoute = require('./likedByRoute')
 //controller
 const postController = require('../controller/postController')
 const authController = require('../controller/authController')
+const upload = require('../utils/multer')
 
 const router = express.Router();
 
@@ -17,7 +18,7 @@ router.use(authController.protect)
 
 router.route('/')
     .get(postController.getAllPost)
-    .post(postController.setUserId, postController.createPost);
+    .post(postController.setUserId, upload, postController.createPost);
 
 router.route('/:id')
     .get(postController.getPostById)

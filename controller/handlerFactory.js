@@ -10,26 +10,6 @@ exports.getAll = (Model, popOptions) => catchAsync(async (req, res, next) => {
     let filter = {}
     //allowing for nested routes
     if(req.params.postId) filter = {post: req.params.postId }
-    
-    // const features = new APIFeatures(Model.find(filter), req.query).filter().sort().limitFields().pagination();
-    // //explain is used to watch out the read performance
-    // // const doc = await features.query.explain();
-
-    // // //starts from the query coming from the APIFeatures object
-    // // let query = features.query
-    // // if(popOptions) query = query.populate(popOptions);
-    
-    // const doc = await features.query;
-    // // const doc = await query;
-
-    // res.status(statusCode.SUCCESS).json({
-    //     status: "success",
-    //     result: doc.length,
-    //     data: {
-    //         data: doc
-    //     }
-    // })
-
 
      // Check if there are any query parameters to filter by
      if (Object.keys(req.query).length > 0) {
