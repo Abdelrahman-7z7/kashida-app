@@ -7,6 +7,7 @@ const AppError = require('../utils/appError')
 const User = require('../models/userModel')
 const cloudinary = require('../utils/cloudinary');
 const imageProcess = require('../utils/imageUpload'); // Import the reusable function
+const APIFeatures = require('../utils/apiFeatures')
 
 //middleware for setting the user and tour id
 exports.setUserId = (req, res, next) => {
@@ -16,7 +17,71 @@ exports.setUserId = (req, res, next) => {
 }
 
 exports.updatePost = factory.updateOne(Post);
-exports.getAllPost = factory.getAll(Post);
+
+// exports.getAllPost = factory.getAll(Post);
+exports.getAllPost = catchAsync(async (req, res, next) => {
+    const userId = req.user.id; // Assuming the user's ID is available on `req.user`
+
+    // Step 1: Use APIFeatures for base query
+    const features = new APIFeatures(Post.find(), req.query)
+        .filter()
+        .sort()
+        .limitFields()
+        .pagination();
+
+    // Execute base query to get post IDs
+    const posts = await features.query;
+
+    //in case there is no post no need to perform the next operations
+    if (!posts.length) {
+        return res.status(200).json({
+            status: 'success',
+            results: 0,
+            data: {
+                posts: [],
+            },
+        });
+    }
+
+    // Step 2: Aggregate to check like status for each post using PostLikes
+    const postIds = posts.map(post => post._id);
+
+    const likes = await PostLikes.aggregate([
+        {
+            $match: {
+                userId: new mongoose.Types.ObjectId(userId),  // Match the current user ID
+                postId: { $in: postIds },                   // Match posts the user has liked
+            },
+        },
+        {
+            $group: {
+                _id: '$postId',        // Group by post ID
+                hasLiked: { $first: true }, // Add hasLiked flag
+            },
+        },
+    ]);
+
+    const likeStatusMap = likes.reduce((acc, like) => {
+        acc[like._id.toString()] = true; // Mark posts liked by the user
+        return acc;
+    }, {});
+
+    // Step 3: Attach the like status to each post
+    const postsWithLikes = posts.map(post => ({
+        ...post.toObject(), // Convert Mongoose document to plain object
+        hasLiked: likeStatusMap[post._id.toString()] || false, // Attach like status
+    }));
+
+    // Step 4: Send response
+    res.status(200).json({
+        status: 'success',
+        results: postsWithLikes.length,
+        data: {
+            posts: postsWithLikes,
+        },
+    });
+});
+
 
 exports.getPostById = catchAsync(async (req, res, next) => {
     const postId = req.params.id; // Extract postId from request parameters
@@ -124,8 +189,10 @@ exports.deletePost = catchAsync(async (req, res, next) =>{
         return next(new AppError('No post found with that id', 404))
     }
 
-    //use the imageProcess function to delete image from the cloudinary
-    await imageProcess.deleteImagesFromCloudinary(post.photos);
+    if(post.photos.length){
+        //use the imageProcess function to delete image from the cloudinary
+        await imageProcess.deleteImagesFromCloudinary(post.photos);
+    }
 
     //delete the post 
     await Post.deleteOne({_id: post._id});
