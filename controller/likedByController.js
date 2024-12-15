@@ -7,6 +7,18 @@ const catchAsync = require('../utils/catchAsync')
 //helping for testing
 const factory = require('./handlerFactory')
 
+//get likes post
+exports.getLike = catchAsync(async (req, res, next) => {
+
+    const like = await PostLikes.findOne({userId: req.user.id, postId: req.params.postId})
+
+    res.status(200).json({
+        status:'success',
+        hasLiked: like? true : false
+    })
+})
+
+
 //like post
 exports.likePost = catchAsync(async (req, res, next) => {
     // 1) get the user and the post Id
