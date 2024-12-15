@@ -6,7 +6,7 @@ const mongoose = require('mongoose')
 const AppError = require('../utils/appError')
 const User = require('../models/userModel')
 const cloudinary = require('../utils/cloudinary');
-const uploadImagesToCloudinary = require('../utils/imageUpload'); // Import the reusable function
+const imageProcess = require('../utils/imageUpload'); // Import the reusable function
 
 //middleware for setting the user and tour id
 exports.setUserId = (req, res, next) => {
@@ -16,13 +16,12 @@ exports.setUserId = (req, res, next) => {
 }
 
 exports.updatePost = factory.updateOne(Post);
-exports.deletePost = factory.deleteOne(Post);
 exports.getAllPost = factory.getAll(Post);
 
 exports.getPostById = catchAsync(async (req, res, next) => {
     const postId = req.params.id; // Extract postId from request parameters
     const userId = req.user.id; // Get the current user's ID from the request
-
+    
     // Validate that postId is a valid ObjectId
     if (!mongoose.Types.ObjectId.isValid(postId)) {
         return next(new AppError("Invalid Post ID", 400));
@@ -91,10 +90,10 @@ exports.createPost = catchAsync(async (req, res, next)=> {
     if(!req.files || req.files.length === 0){
         return next(new AppError('No files specified', 400));
     }
-
+    
     // Upload the images using the reusable function
-    const uploadedImages = await uploadImagesToCloudinary(req.files); 
-
+    const uploadedImages = await imageProcess.uploadImagesToCloudinary(req.files); 
+    
     //create post with all fields
     const post = await Post.create({
         title: "req.body.title",
@@ -106,7 +105,7 @@ exports.createPost = catchAsync(async (req, res, next)=> {
         photos: uploadedImages,
         user: req.user.id
     })
-
+    
     //send success response
     res.status(201).json({
         status:'success',
@@ -117,12 +116,31 @@ exports.createPost = catchAsync(async (req, res, next)=> {
     
 })
 
+// exports.deletePost = factory.deleteOne(Post);
+exports.deletePost = catchAsync(async (req, res, next) =>{
+    const post = await Post.findById(req.params.id);
+
+    if(!post){
+        return next(new AppError('No post found with that id', 404))
+    }
+
+    //use the imageProcess function to delete image from the cloudinary
+    await imageProcess.deleteImagesFromCloudinary(post.photos);
+
+    //delete the post 
+    await Post.deleteOne({_id: post._id});
+
+    res.status(204).json({
+        status: 'success',
+        message: 'Post and associated images were deleted successfully'
+    })
+})
 
 // exports.createPost = catchAsync(async (req, res, next)=> {
-//     //check if the files are uploaded
-//     if(!req.files || req.files.length === 0){
-//         return next(new AppError('No files specified', 400));
-//     }
+    //     //check if the files are uploaded
+    //     if(!req.files || req.files.length === 0){
+        //         return next(new AppError('No files specified', 400));
+        //     }
     
 //     const uploadedImages = []; //to store files URLs
 //     const resizeOptions = {width:500, crop:'scale', quality: 'auto:best', fetch_format: 'auto'};

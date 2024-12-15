@@ -2,7 +2,7 @@ const cloudinary = require('./cloudinary')
 const AppError = require('./appError')
 const catchAsync = require('./catchAsync')
 
-const uploadImagesToCloudinary = async (files) => {
+exports.uploadImagesToCloudinary = async (files) => {
     const uploadedImages = [];
     const resizeOptions = { width: 500, crop: 'scale', quality: 'auto:best', fetch_format: 'auto' };
 
@@ -35,4 +35,26 @@ const uploadImagesToCloudinary = async (files) => {
     return uploadedImages;
 };
 
-module.exports = uploadImagesToCloudinary;
+// Function to extract public IDs from Cloudinary URLs
+const extractPublicIds = (urls) => {
+    return urls.map(url => {
+        const parts = url.split('/');
+        const publicIdWithExtension = parts[parts.length - 1];
+        return publicIdWithExtension.split('.')[0]; // Remove file extension
+    });
+};
+
+// Function to delete images from Cloudinary
+exports.deleteImagesFromCloudinary = async (urls) => {
+    const publicIds = extractPublicIds(urls);
+
+    try {
+        await Promise.all(
+            publicIds.map(publicId =>
+                cloudinary.uploader.destroy(publicId, { resource_type: 'image' })
+            )
+        );
+    } catch (error) {
+        throw new AppError('Error deleting images from Cloudinary', 500);
+    }
+};
