@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const catchAsync = require('../utils/catchAsync')
+const AppError = require('../utils/appError')
 
 const followSchema = new mongoose.Schema({
     follower: {
@@ -24,22 +26,27 @@ followSchema.index({follower: 1, following: 1}, {unique: true})
 
 //populate the user info using query middleware
 followSchema.pre(/^find/, function(next){
-    this.populate({
-        path: 'user',
-        select: 'username photo'
-    })
+    if(this.populateFollowersOnly === true){
+        this.populate({
+            path: 'follower',
+            select: 'username photo'
+        })
+    }else if(this.populateFollowingsOnly === true){
+        this.populate({
+            path: 'following',
+            select: 'username photo'
+        })
+    }else{
+        this.populate({
+            path: 'follower',
+            select: 'username photo'
+        }).populate({
+            path: 'following',
+            select: 'username photo'
+        })
+    }
     next();
 })
-
-// //using document middleware to increase the # follow and following for both users
-// followSchema.pre('save', function(next){
-//     const doc = this;
-
-//     //ensure this is a new doc
-//     if(!doc.isNew){
-//         return next()
-//     }
-// })
 
 const Follow = mongoose.model('Follow', followSchema)
 
