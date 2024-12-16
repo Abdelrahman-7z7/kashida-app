@@ -163,10 +163,10 @@ exports.createPost = catchAsync(async (req, res, next)=> {
     const post = await Post.create({
         title: "req.body.title",
         description: "req.body.description",
-        categories: "Naskh",
-        // title: req.body.title,
-        // description: req.body.description,
-        // categories: req.body.categories,
+        categories: "Diwani",
+        title: req.body.title,
+        description: req.body.description,
+        categories: req.body.categories,
         photos: uploadedImages,
         user: req.user.id
     })

@@ -5,7 +5,7 @@ const User = require('../models/userModel')
 const postSchema = new mongoose.Schema({
     photos: {
         type: Array,
-        required: [true, "Post must have a picture"],
+        // required: [true, "Post must have a picture"],
     },
     title: {
         type: String,
@@ -40,10 +40,10 @@ const postSchema = new mongoose.Schema({
         ref: 'User',
         required: [true, 'A post must belong to a user']
     }
-},{
-    toJSON: {virtuals: true},
-    toObject: {virtuals: true}
-})
+    },{
+        toJSON: {virtuals: true},
+        toObject: {virtuals: true}
+    })
 
 //turned on when we implement the user model
 // populate the user (Using a document middleware) pre save to be stored with the post
