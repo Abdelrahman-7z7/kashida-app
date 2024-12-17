@@ -203,6 +203,49 @@ exports.deletePost = catchAsync(async (req, res, next) =>{
     })
 })
 
+//search controller for posts
+exports.searchPost = catchAsync(async (req, res, next)=>{
+    const {searchTerm} = req.params;
+
+    //check for the search term
+    if(!searchTerm){
+        return next(new AppError('Please provide a search term to search posts for.', 400))
+    }
+
+    // Split the searchTerm into words
+    const searchWords = searchTerm.split(/\s+/);
+
+    // Build regex for each word to match in title, description, and categories
+    const regexConditions = searchWords.map(word => ({
+        $or: [
+            { title: { $regex: word, $options: 'i' } },
+            { description: { $regex: word, $options: 'i' } },
+            { categories: { $regex: word, $options: 'i' } }
+        ]
+    }));
+
+    //APIFeatures and preparing the query
+    const features = new APIFeatures(Post.find({$or: regexConditions}), req.query)
+        .filter()
+        .sort()
+        .limitFields()
+        .pagination();
+
+    //await for fetching the query
+    const posts = await features.query;
+
+    //send response
+    res.status(200).json({
+        status: 'success',
+        results: posts.length,
+        data: {
+            posts
+        }
+    })
+
+})
+
+
 // exports.createPost = catchAsync(async (req, res, next)=> {
     //     //check if the files are uploaded
     //     if(!req.files || req.files.length === 0){

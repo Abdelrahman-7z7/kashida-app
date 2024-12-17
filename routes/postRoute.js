@@ -25,6 +25,6 @@ router.route('/:id')
     .patch(postController.updatePost)
     .delete(postController.setUserId, postController.deletePost);
 
-
+router.get('/search/:searchTerm', postController.searchPost)
 
 module.exports = router;
