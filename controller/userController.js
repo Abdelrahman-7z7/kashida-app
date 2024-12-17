@@ -2,6 +2,7 @@ const User = require('../models/userModel')
 const factory = require('./handlerFactory')
 const catchAsync = require('../utils/catchAsync')
 const AppError = require('../utils/appError')
+const APIFeatures = require('../utils/apiFeatures')
 
 // creating a filtered Object function to restrict and filter the body
 const filterObj = (obj, ...allowedFields) => {
@@ -75,7 +76,9 @@ exports.createNewUser = (req, res) => {
     })
 };
 
-
+//search for user by name or username
+//ex: api/users/search/ah?page=1&limit=2 
+//we can limit the search of the users by pa
 exports.searchForUser = catchAsync(async (req, res, next)=>{
     //fetch the searchTerm parameter
     const {searchTerm} = req.params; // searchTerm == username or name 
@@ -85,13 +88,19 @@ exports.searchForUser = catchAsync(async (req, res, next)=>{
         return next(new AppError('Please provide a username to search for.', 400))
     }
 
-    //perform the input search term to lowercase to matching name or username
-    const users = await User.find({
+    //APIFeatures
+    const features = new APIFeatures(User.find({
         $or: [
             {username: {$regex: `^${searchTerm}`, $options: 'i'}}, //search in username (case insensitive)
             {name: {$regex: `^${searchTerm}`, $options: 'i'}} //search in name (case insensitive)
         ]
-    })
+    }), req.query)
+    .filter()
+    .sort()
+    .limitFields()
+    .pagination();
+
+    const users = await features.query;
 
     //response with the found users and it can be empty determine that no user is found
     res.status(200).json({
