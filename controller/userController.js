@@ -91,8 +91,8 @@ exports.searchForUser = catchAsync(async (req, res, next)=>{
     //APIFeatures
     const features = new APIFeatures(User.find({
         $or: [
-            {username: {$regex: `^${searchTerm}`, $options: 'i'}}, //search in username (case insensitive)
-            {name: {$regex: `^${searchTerm}`, $options: 'i'}} //search in name (case insensitive)
+            {username: {$regex: `${searchTerm}`, $options: 'i'}}, //search in username (case insensitive)
+            {name: {$regex: `${searchTerm}`, $options: 'i'}} //search in name (case insensitive)
         ]
     }), req.query)
     .filter()
