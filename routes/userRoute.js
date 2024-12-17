@@ -21,6 +21,7 @@ router.patch('/updateMyEmail', authController.updateEmail)
 router.get('/me', userController.getMe, userController.getUserById)
 router.patch('/updateMe', userController.updateMe)
 router.delete('/deleteMe', userController.deleteMe)
+router.get('/search/:searchTerm', userController.searchForUser)
 
 router.use(authController.restrictTo('admin')) 
 

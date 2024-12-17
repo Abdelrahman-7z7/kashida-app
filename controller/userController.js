@@ -75,3 +75,31 @@ exports.createNewUser = (req, res) => {
     })
 };
 
+
+exports.searchForUser = catchAsync(async (req, res, next)=>{
+    //fetch the searchTerm parameter
+    const {searchTerm} = req.params; // searchTerm == username or name 
+
+    //check parameter availability
+    if(!searchTerm){
+        return next(new AppError('Please provide a username to search for.', 400))
+    }
+
+    //perform the input search term to lowercase to matching name or username
+    const users = await User.find({
+        $or: [
+            {username: {$regex: `^${searchTerm}`, $options: 'i'}}, //search in username (case insensitive)
+            {name: {$regex: `^${searchTerm}`, $options: 'i'}} //search in name (case insensitive)
+        ]
+    })
+
+    //response with the found users and it can be empty determine that no user is found
+    res.status(200).json({
+        status: 'success',
+        result: users.length,
+        data:{
+            users
+        }
+    })
+})
+
