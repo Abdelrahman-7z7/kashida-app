@@ -23,15 +23,17 @@ const followSchema = new mongoose.Schema({
 
 //enhancing the schema search by adding indexes 
 followSchema.index({follower: 1, following: 1}, {unique: true})
+followSchema.index({follower:1})
+followSchema.index({following: 1})
 
 //populate the user info using query middleware
 followSchema.pre(/^find/, function(next){
-    if(this.populateFollowersOnly === true){
+    if(this.options.populateFollowersOnly === true){
         this.populate({
             path: 'follower',
             select: 'username photo'
         })
-    }else if(this.populateFollowingsOnly === true){
+    }else if(this.options.populateFollowingsOnly === true){
         this.populate({
             path: 'following',
             select: 'username photo'

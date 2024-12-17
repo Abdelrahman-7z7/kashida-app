@@ -14,8 +14,8 @@ router.delete('/:userId/unfollow', followController.unfollow)
 //fetching followers and followings routes
 router.get('/:userId/followers', followController.getFollowers)
 router.get('/:userId/followings', followController.getFollowings)
-router.get('/me/followers', followController.getMyFollowers)
-router.get('/me/followings', followController.getMyFollowings)
+router.get('/myFollowers', followController.getMyFollowers)
+router.get('/myFollowings', followController.getMyFollowings)
 
 
 module.exports = router;
