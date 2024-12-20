@@ -6,18 +6,20 @@ const likedByRoute = require('./likedByRoute')
 //controller
 const commentController = require('../controller/commentController')
 const authController = require('../controller/authController')
+const upload = require('../utils/multer')
 
 //init the app
-const router = express.Router();
+const router = express.Router({mergeParams: true});
 
 router.use(authController.protect)
 //Middleware for handling a nested likedBy route
-router.use('/:id/', likedByRoute)
+router.use('/:commentId/', likedByRoute)
 
 router.route('/')
     .get(commentController.getAllComments)
-    .post(commentController.createComment);
+    .post(upload, commentController.createComment)
 
+    
 router.route('/:id')
     .get(commentController.getCommentById)
     .patch(commentController.updateComment)

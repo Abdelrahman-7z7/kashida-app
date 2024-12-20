@@ -2,8 +2,7 @@ const mongoose = require('mongoose')
 
 const commentSchema = new mongoose.Schema({
     photo: {
-        type: Array,
-        default: 'default.jpg'
+        type: Array
     },
     comment: {
         type: String,
@@ -12,7 +11,7 @@ const commentSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.ObjectId,
         ref: 'User',
-        //required: [true, 'A comment must belong to a user']
+        required: [true, 'A comment must belong to a user']
     },
     post: {
         type: mongoose.Schema.ObjectId, 
@@ -34,14 +33,14 @@ const commentSchema = new mongoose.Schema({
 })
 
 // populate user using pre save middleware
-// commentSchema.pre('save', function(next) {
-//     // this.updatedAt = Date.now();
-//     this.populate({
-//         path: 'user',
-//         select: 'username profilePic'
-//     })
-//     next();
-// })
+commentSchema.pre(/^find/, function(next) {
+    // this.updatedAt = Date.now();
+    this.populate({
+        path: 'user',
+        select: 'username photo'
+    })
+    next();
+})
 
 //handling the updating timestamps
 commentSchema.pre('findOneAndUpdate', async function(next){

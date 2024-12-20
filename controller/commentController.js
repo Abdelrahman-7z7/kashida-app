@@ -3,59 +3,157 @@ const factory = require('./handlerFactory')
 const catchAsync = require('../utils/catchAsync')
 const AppError = require('../utils/appError')
 const mongoose = require('mongoose')
+const imageProcess = require('../utils/imageUpload'); // Import the reusable function
+const {CommentLikes} = require('../models/likedByModel')
+const APIFeatures = require('../utils/apiFeatures')
 
 exports.updateComment = factory.updateOne(Comment);
 exports.deleteComment = factory.deleteOne(Comment);
-exports.createComment = factory.createOne(Comment);
+
+exports.createComment = catchAsync(async (req, res, next) => {
+    const postId = req.params.postId
+    const userId = req.user.id
+
+    console.log(req.body.comment)
+    console.log(req.headers)
+    console.log(req.files)
+
+    //check if the files are uploaded
+    if(!req.files || req.files.length === 0){
+        return next(new AppError('No files specified', 400));
+    }
+    
+    // Upload the images using the reusable function
+    const uploadedImage = await imageProcess.uploadImagesToCloudinary(req.files); 
+
+    const comment = await Comment.create({
+        user: userId,
+        post: postId,
+        comment: req.body.comment,
+        photo: uploadedImage
+    })
+
+    //send response 
+    res.status(201).json({
+        status: 'success',
+        data:{
+            comment
+        }
+    })
+});
+
 
 exports.getAllComments = catchAsync(async (req, res, next) => {
-    const userId = req.user.id; // Get the current user's ID from the request
+    const postId = req.params.postId; // Get the postId from the route params
+    const currentUser = req.user.id; // Get the current user's ID from the request
 
-    const comments = await Comment.aggregate([
-        // Step 1: Lookup likes for each comment
-        {
-            $lookup: {
-                from: "commentlikes", // Name of the CommentLikes collection
-                let: { commentId: "$_id" }, // Reference to the current comment's `_id`
-                pipeline: [
-                    {
-                        $match: {
-                            $expr: {
-                                $and: [
-                                    { $eq: ["$commentId", "$$commentId"] }, // Match the commentId
-                                    { $eq: ["$userId", new mongoose.Types.ObjectId(userId)] }, // Match the userId
-                                ],
-                            },
-                        },
-                    },
-                    { $project: { _id: 0 } }, // Exclude unnecessary fields from the join
-                ],
-                as: "userLike", // Output an array of matches
-            },
-        },
-        // Step 2: Add the hasLiked field
-        {
-            $addFields: {
-                hasLiked: { $gt: [{ $size: "$userLike" }, 0] }, // True if userLike array is not empty
-            },
-        },
-        // Step 3: Remove unnecessary fields (optional)
-        {
-            $project: {
-                userLike: 0, // Exclude the temporary userLike array
-            },
-        },
-    ]);
+    // 1) Fetch comments for the specific post
+    const features = new APIFeatures(Comment.find({post: postId}), req.query).filter().pagination()
+    // const comments = await Comment.find({ post: postId });
+    const comments = await features.query;
+
+    // 2) Collect all unique comment IDs
+    const commentIds = comments.map(comment => comment._id.toString());
+
+    console.log(commentIds)
+
+    // 3) Check if the current user has liked any of these comments
+    const userLikes = await CommentLikes.find({
+        userId: currentUser,
+        commentId: { $in: commentIds }, // Use commentId instead of _id
+    });
+
+    console.log(userLikes)
+    
+    // 4) Create a set of liked comment IDs for quick lookup
+    const likedCommentsSet = new Set(userLikes.map(like => like.commentId.toString()));
+
+    console.log(likedCommentsSet)
+
+    // 5) Add `hasLiked` field to each comment
+    const commentsWithLikeStatus = comments.map(comment => ({
+        ...comment.toObject(),
+        hasLiked: likedCommentsSet.has(comment._id.toString()), // Check if the comment is liked by the user
+    }));
 
     // Send the response
     res.status(200).json({
-        status: "success",
-        results: comments.length,
+        status: 'success',
+        results: commentsWithLikeStatus.length,
         data: {
-            comments: comments, // Return the list of comments with like status
+            comments: commentsWithLikeStatus,
         },
     });
 });
+
+
+// exports.getAllComments = catchAsync(async (req, res, next) => {
+//     const postId = req.params.postId; // Get the postId from the route params
+//     const userId = req.user.id; // Get the current user's ID from the request
+
+//     const comments = await Comment.aggregate([
+//         // Step 1: Match comments for the specific post
+//         {
+//             $match: { post: new mongoose.Types.ObjectId(postId) },
+//         },
+//         // Step 2: Lookup user details
+//         {
+//             $lookup: {
+//                 from: "users", // Name of the User collection
+//                 localField: "user",
+//                 foreignField: "_id",
+//                 as: "user",
+//             },
+//         },
+//         {
+//             $unwind: "$user", // Unwind the user array (since it's a one-to-one relationship)
+//         },
+//         // Step 3: Lookup likes for each comment
+//         {
+//             $lookup: {
+//                 from: "commentlikes", // Name of the CommentLikes collection
+//                 let: { commentId: "$_id" }, // Reference to the current comment's `_id`
+//                 pipeline: [
+//                     {
+//                         $match: {
+//                             $expr: {
+//                                 $and: [
+//                                     { $eq: ["$commentId", "$$commentId"] }, // Match the commentId
+//                                     { $eq: ["$userId", new mongoose.Types.ObjectId(userId)] }, // Match the userId
+//                                 ],
+//                             },
+//                         },
+//                     },
+//                     { $project: { _id: 0 } }, // Exclude unnecessary fields from the join
+//                 ],
+//                 as: "userLike", // Output an array of matches
+//             },
+//         },
+//         // Step 4: Add the hasLiked field
+//         {
+//             $addFields: {
+//                 hasLiked: { $gt: [{ $size: "$userLike" }, 0] }, // True if userLike array is not empty
+//             },
+//         },
+//         // Step 5: Remove unnecessary fields
+//         {
+//             $project: {
+//                 userLike: 0, // Exclude the temporary userLike array
+//                 "user.password": 0, // Optionally exclude sensitive user fields
+//             },
+//         },
+//     ]);
+
+
+//     // Send the response
+//     res.status(200).json({
+//         status: 'success',
+//         results: comments.length,
+//         data: {
+//             comments,
+//         },
+//     });
+// });
 
 
 // exports.getCommentById = factory.getOne(Comment);

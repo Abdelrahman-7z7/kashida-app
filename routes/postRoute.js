@@ -2,6 +2,7 @@ const express = require('express')
 
 //Routes
 const likedByRoute = require('./likedByRoute')
+const commentRoute = require('./commentRoute')
 
 //controller
 const postController = require('../controller/postController')
@@ -12,6 +13,7 @@ const router = express.Router();
 
 //Middleware for handling a nested likedBy route
 router.use('/:postId/', likedByRoute)
+router.use('/:postId/comments', commentRoute)
 
 //Middleware => protecting the following route
 router.use(authController.protect)
