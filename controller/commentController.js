@@ -32,7 +32,7 @@ exports.deleteComment = catchAsync(async (req, res, next) =>{
 
 exports.createComment = catchAsync(async (req, res, next) => {
     const postId = req.params.postId
-    const userId = req.user.id
+    const userId = req.user.id  
 
     //check if the files are uploaded
     if(!req.files || req.files.length === 0){

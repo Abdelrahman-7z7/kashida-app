@@ -7,13 +7,13 @@ const likedByRoute = require('./likedByRoute')
 const replyController = require('../controller/replyController')
 const authController = require('../controller/authController')
 
-const router = express.Router()
+const router = express.Router({mergeParams: true})
 
 //Middleware for handling authentication
 router.use(authController.protect)
 
 //Middleware for handling a nested likedBy route
-router.use('/:id/', likedByRoute)
+router.use('/:replyId/', likedByRoute)
 
 router.route('/')
     .get(replyController.getAllReplies)
