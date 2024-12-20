@@ -8,15 +8,31 @@ const {CommentLikes} = require('../models/likedByModel')
 const APIFeatures = require('../utils/apiFeatures')
 
 exports.updateComment = factory.updateOne(Comment);
-exports.deleteComment = factory.deleteOne(Comment);
+
+exports.deleteComment = catchAsync(async (req, res, next) =>{
+    const comment = await Comment.findById(req.params.id);
+
+    if(!comment){
+        return next(new AppError('No comment found with that id', 404))
+    }
+
+    if(comment.photo.length){
+        //use the imageProcess function to delete image from the cloudinary
+        await imageProcess.deleteImagesFromCloudinary(comment.photo);
+    }
+
+    //delete the post 
+    await Comment.deleteOne({_id: comment._id});
+
+    res.status(204).json({
+        status: 'success',
+        message: 'Comment and associated image were deleted successfully'
+    })
+});
 
 exports.createComment = catchAsync(async (req, res, next) => {
     const postId = req.params.postId
     const userId = req.user.id
-
-    console.log(req.body.comment)
-    console.log(req.headers)
-    console.log(req.files)
 
     //check if the files are uploaded
     if(!req.files || req.files.length === 0){
