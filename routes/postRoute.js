@@ -7,7 +7,7 @@ const commentRoute = require('./commentRoute')
 //controller
 const postController = require('../controller/postController')
 const authController = require('../controller/authController')
-const upload = require('../utils/multer')
+const configureMulter = require('../utils/multer')
 
 const router = express.Router();
 
@@ -20,7 +20,7 @@ router.use(authController.protect)
 
 router.route('/')
     .get(postController.getAllPost)
-    .post(postController.setUserId, upload, postController.createPost);
+    .post(postController.setUserId, configureMulter('photos', 10), postController.createPost);
 
 router.route('/:id')
     .get(postController.getPostById)
