@@ -50,8 +50,7 @@ const userSchema = new mongoose.Schema({
         type: String
     },
     photo: {
-        type: String,
-        default: 'default.jpg'
+        type: Array
     },
     bio: {
         type: String,

@@ -3,6 +3,7 @@ const factory = require('./handlerFactory')
 const catchAsync = require('../utils/catchAsync')
 const AppError = require('../utils/appError')
 const APIFeatures = require('../utils/apiFeatures')
+const imageProcess = require('../utils/imageUpload')
 
 // creating a filtered Object function to restrict and filter the body
 const filterObj = (obj, ...allowedFields) => {
@@ -38,10 +39,20 @@ exports.updateMe = catchAsync( async (req, res, next) => {
     // 2) using the filterObj method to filter the req.body data
     const filteredBody = filterObj(req.body, 'name', 'username', 'bio', 'photo')
 
-    // 3) update the user document
+    // 3) Handle image deletion and upload
+    if (req.files && req.files[0]?.fieldname === 'photo') {
+        const user = await User.findById(req.user.id);
+        if (user.photo) {
+            await imageProcess.deleteImagesFromCloudinary(user.photo); // Delete existing photo
+        }
+        const uploadedImages = await imageProcess.uploadImagesToCloudinary(req.files);
+        filteredBody.photo = uploadedImages[0]; // Assign the first URL
+    }
+
+    // 4) update the user document
     const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {new: true, runValidators: true})
 
-    // 4) send the response
+    // 5) send the response
     res.status(200).json({
         status: 'success',
         message: 'User update successfully',

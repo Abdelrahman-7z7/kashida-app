@@ -2,6 +2,7 @@ const express = require('express')
 
 const authController = require('../controller/authController')
 const userController = require('../controller/userController')
+const configureMulter = require('../utils/multer')
 
 const router = express.Router()
 
@@ -19,7 +20,7 @@ router.patch('/updateMyEmail', authController.updateEmail)
 
 
 router.get('/me', userController.getMe, userController.getUserById)
-router.patch('/updateMe', userController.updateMe)
+router.patch('/updateMe', configureMulter('photo', 1),userController.updateMe)
 router.delete('/deleteMe', userController.deleteMe)
 router.get('/search/:searchTerm', userController.searchForUser)
 
