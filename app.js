@@ -9,6 +9,7 @@ const replyRoute = require('./routes/replyRoute')
 const userRoute = require('./routes/userRoute')
 const LikedByRoute = require('./routes/likedByRoute')
 const followRoute = require('./routes/followRoute')
+const categoryRoute = require('./routes/categoryRoute')
 
 // Express app setup
 const app = express()
@@ -44,6 +45,7 @@ app.use('/api/k1/replies', replyRoute);
 app.use('/api/k1/users', userRoute);
 app.use('/api/k1/', LikedByRoute);
 app.use('/api/k1/follow', followRoute);
+app.use('/api/k1/category', categoryRoute);
 
 //reaching this point refers to having an error
 // ## using global-error-handler from errorController ##
