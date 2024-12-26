@@ -13,6 +13,19 @@ const mongoose = require('mongoose')
 const imageProcess = require('../utils/imageUpload'); // Import the reusable function
 const APIFeatures = require('../utils/apiFeatures')
 
+// creating a filtered Object function to restrict and filter the body
+const filterObj = (obj, ...allowedFields) => {
+    const newObj = {};
+
+    Object.keys(obj).forEach(key => {
+        if(allowedFields.includes(key)){
+            newObj[key] = obj[key]
+        }
+    })
+
+    return newObj;
+}
+
 //middleware for setting the user and tour id
 exports.setUserId = (req, res, next) => {
     //from the protect middleware
@@ -20,7 +33,25 @@ exports.setUserId = (req, res, next) => {
     next();
 }
 
-exports.updatePost = factory.updateOne(Post);
+//middleware for checking the current user validation to delete or update another user's posts
+exports.checkUser = catchAsync(async (req, res, next)=>{
+    const post = await Post.findById(req.params.id);
+
+    if(!post) return next(new AppError('No post found with that ID', 404));
+
+    //for testing 
+    // console.log('Post user:', post.user._id.toString());
+    // console.log('Request user:', req.user.id);
+
+    if(post.user._id.toString() !== req.user.id){
+        return next(new AppError('you do not have the permission for this action', 403));
+    }
+
+    req.post = post
+
+    next();
+})
+
 
 // exports.getAllPost = factory.getAll(Post);
 exports.getAllPost = catchAsync(async (req, res, next) => {
@@ -32,9 +63,9 @@ exports.getAllPost = catchAsync(async (req, res, next) => {
         .sort()
         .limitFields()
         .pagination();
-
-    // Execute base query to get post IDs
-    const posts = await features.query;
+        
+        // Execute base query to get post IDs
+        const posts = await features.query;
 
     //in case there is no post no need to perform the next operations
     if (!posts.length) {
@@ -49,7 +80,7 @@ exports.getAllPost = catchAsync(async (req, res, next) => {
 
     // Step 2: Aggregate to check like status for each post using PostLikes
     const postIds = posts.map(post => post._id);
-
+    
     const likes = await PostLikes.aggregate([
         {
             $match: {
@@ -64,12 +95,12 @@ exports.getAllPost = catchAsync(async (req, res, next) => {
             },
         },
     ]);
-
+    
     const likeStatusMap = likes.reduce((acc, like) => {
         acc[like._id.toString()] = true; // Mark posts liked by the user
         return acc;
     }, {});
-
+    
     // Step 3: Attach the like status to each post
     const postsWithLikes = posts.map(post => ({
         ...post.toObject(), // Convert Mongoose document to plain object
@@ -95,7 +126,7 @@ exports.getPostById = catchAsync(async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(postId)) {
         return next(new AppError("Invalid Post ID", 400));
     }
-
+    
     const post = await Post.aggregate([
         // Step 1: Match the specific post by its ID
         {
@@ -157,13 +188,13 @@ exports.getPostById = catchAsync(async (req, res, next) => {
 exports.createPost = catchAsync(async (req, res, next)=> {
     //checking if the provided categories is valid 
     const category = await Category.exists({name: req.body.categories})
-
+    
     if(!category){
         return next(new AppError('Invalid category', 404))
     }
-
+    
     let uploadedImages = null;
-
+    
     //check if the files are uploaded
     if(req.files || req.files.length > 0){
         // Upload the images using the reusable function
@@ -178,7 +209,7 @@ exports.createPost = catchAsync(async (req, res, next)=> {
         photos: uploadedImages,
         user: req.user.id
     })
-
+    
     //send success response
     res.status(201).json({
         status:'success',
@@ -188,25 +219,53 @@ exports.createPost = catchAsync(async (req, res, next)=> {
     })
 })
 
+//updating post
+exports.updatePost = catchAsync( async (req, res, next) => {
+    const post = req.post
+
+    //using the filterObj method to filter the req.body data
+    const filteredBody = filterObj(req.body, 'title', 'description', 'categories')
+
+    // //test
+    console.log(filteredBody.title)
+
+    if(filteredBody.categories){
+        //check if the provided categories is valid 
+        const category = await Category.exists({name: req.body.categories})
+        
+        if(!category){
+            return next(new AppError('Invalid category', 404))
+        }
+    }
+    
+    //update the post
+    post.set(filteredBody);
+
+    //save the updated post
+    await post.save();
+    
+    res.status(200).json({
+        status:'success',
+        data:{
+            post
+        }
+    })
+});
+
 // exports.deletePost = factory.deleteOne(Post);
 exports.deletePost = catchAsync(async (req, res, next) =>{
-    const post = await Post.findById(req.params.id);
-
-    if(!post){
-        return next(new AppError('No post found with that id', 404))
-    }
+    const post = req.post
 
     if(post.photos.length){
         //use the imageProcess function to delete image from the cloudinary
         await imageProcess.deleteImagesFromCloudinary(post.photos);
     }
-
+    
+    //decreasing the number of posts in the post's user info
+    await User.findByIdAndUpdate(post.user, { $inc: { posts: -1} });
+    
     //delete the post 
     await Post.deleteOne({_id: post._id});
-
-    //decreasing the number of posts in the user's info
-    await User.findByIdAndUpdate(req.user.id, { $inc: { posts: -1} });
-
 
     res.status(204).json({
         status: 'success',

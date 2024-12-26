@@ -59,7 +59,7 @@ exports.unlikePost = catchAsync(async (req, res, next) => {
     }
 
     // 4) likes decrement
-    await Post.findByIdAndDelete(postId, {$inc: {likes: -1}})
+    await Post.findByIdAndUpdate(postId, {$inc: {likes: -1}})
 
     // 5) send response
     res.status(200).json({
@@ -108,7 +108,7 @@ exports.unlikeComment = catchAsync(async (req, res, next) => {
     }
 
     // 4) likes decrement
-    await Comment.findByIdAndDelete(commentId, {$inc: {likes: -1}})
+    await Comment.findByIdAndUpdate(commentId, {$inc: {likes: -1}})
 
     // 5) send response
     res.status(200).json({
@@ -157,7 +157,7 @@ exports.unlikeReply = catchAsync(async (req, res, next) => {
     }
 
     // 4) likes decrement
-    await Reply.findByIdAndDelete(replyId, {$inc: {likes: -1}})
+    await Reply.findByIdAndUpdate(replyId, {$inc: {likes: -1}})
 
     // 5) send response
     res.status(200).json({

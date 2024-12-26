@@ -24,8 +24,8 @@ router.route('/')
 
 router.route('/:id')
     .get(postController.getPostById)
-    .patch(postController.updatePost)
-    .delete(postController.setUserId, postController.deletePost);
+    .patch(postController.checkUser ,postController.updatePost)
+    .delete(postController.setUserId, postController.checkUser, postController.deletePost);
 
 router.get('/search/:searchTerm', postController.searchPost)
 
