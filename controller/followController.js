@@ -9,6 +9,11 @@ exports.follow = catchAsync(async (req, res, next) => {
     const currentUser = req.user.id;
     const targetedUser = req.params.userId;
 
+    //checking if no userId sent
+    if(!targetedUser){
+        return next(new AppError('Please provide a userId to follow', 400))
+    }
+
     //checking if the current user trying to follow themselves
     if(currentUser === targetedUser){
         return next(new AppError('You cannot follow yourself', 400))
@@ -49,6 +54,11 @@ exports.unfollow = catchAsync(async (req, res, next) => {
     //getting both of the users IDs
     const currentUser = req.user.id;
     const targetedUser = req.params.userId;
+
+    //checking if no userId sent
+    if(!targetedUser){
+        return next(new AppError('Please provide a userId to follow', 400))
+    }
 
     const follow = await Follow.findOneAndDelete({
         follower: currentUser,

@@ -1,11 +1,14 @@
+//models
 const Post = require('../models/postModel');
-const factory = require('./handlerFactory');
 const {PostLikes} = require('../models/likedByModel');
+const Category = require('../models/categoryModel')
+
+//utils for handling errors and loading
+const factory = require('./handlerFactory');
 const catchAsync = require('../utils/catchAsync');
-const mongoose = require('mongoose')
 const AppError = require('../utils/appError')
-const User = require('../models/userModel')
-const cloudinary = require('../utils/cloudinary');
+
+const mongoose = require('mongoose')
 const imageProcess = require('../utils/imageUpload'); // Import the reusable function
 const APIFeatures = require('../utils/apiFeatures')
 
@@ -151,19 +154,23 @@ exports.getPostById = catchAsync(async (req, res, next) => {
 
 // exports.createPost = factory.createOne(Post);
 exports.createPost = catchAsync(async (req, res, next)=> {
-    //check if the files are uploaded
-    if(!req.files || req.files.length === 0){
-        return next(new AppError('No files specified', 400));
+    //checking if the provided categories is valid 
+    const category = await Category.exists({name: req.body.categories})
+
+    if(!category){
+        return next(new AppError('Invalid category', 404))
     }
-    
-    // Upload the images using the reusable function
-    const uploadedImages = await imageProcess.uploadImagesToCloudinary(req.files); 
+
+    let uploadedImages = null;
+
+    //check if the files are uploaded
+    if(req.files || req.files.length > 0){
+        // Upload the images using the reusable function
+        uploadedImages = await imageProcess.uploadImagesToCloudinary(req.files);    
+    }
     
     //create post with all fields
     const post = await Post.create({
-        title: "req.body.title",
-        description: "req.body.description",
-        categories: "Diwani",
         title: req.body.title,
         description: req.body.description,
         categories: req.body.categories,
@@ -178,7 +185,6 @@ exports.createPost = catchAsync(async (req, res, next)=> {
             post
         }
     })
-    
 })
 
 // exports.deletePost = factory.deleteOne(Post);
@@ -244,59 +250,3 @@ exports.searchPost = catchAsync(async (req, res, next)=>{
     })
 
 })
-
-
-// exports.createPost = catchAsync(async (req, res, next)=> {
-    //     //check if the files are uploaded
-    //     if(!req.files || req.files.length === 0){
-        //         return next(new AppError('No files specified', 400));
-        //     }
-    
-//     const uploadedImages = []; //to store files URLs
-//     const resizeOptions = {width:500, crop:'scale', quality: 'auto:best', fetch_format: 'auto'};
-    
-//     //Loop through files and upload to cloudinary
-//     for(const file of req.files){
-//         if(!file.mimetype.startsWith('image')){
-//             return next(new AppError('Only images files are allowed', 400));
-//         }
-    
-//         //upload images to cloudinary
-//         const result = await new Promise((resolve, reject) => {
-//             const uploadStream = cloudinary.uploader.upload_stream(
-//                 {
-//                     resource_type: 'image',
-//                     transformation: [resizeOptions]
-//                 },
-//                 (error, result)=>{
-//                     if(error) reject(new AppError('error uploading image to cloudinary', 500));
-//                     else resolve(result)
-//                 }
-//             );
-    
-//             uploadStream.end(file.buffer); //Use file.buffer for memory storage
-//         })
-    
-//         //store the uploaded image url 
-//         uploadedImages.push(result.secure_url)
-//     }
-    
-    
-//     //create post with all fields
-//     const post = await Post.create({
-//         title: req.body.title,
-//         description: req.body.description,
-//         categories: req.body.categories,
-//         photos: uploadedImages,
-//         user: req.user.id
-//     })
-
-//     //send success response
-//     res.status(201).json({
-//         status:'success',
-//         data:{
-//             post
-//         }
-//     })
-    
-// })

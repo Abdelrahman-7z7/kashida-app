@@ -17,11 +17,11 @@ const postSchema = new mongoose.Schema({
     },
     categories: {
         type: String,
-        required: [true, "Post must at least select one categories"],
-        enum: {
-            values: ['Naskh' , 'Thuluth', 'Diwani', 'Ruqa`ah', 'Kufic', 'Maghribi', 'Farsi', 'Ta`liq' , 'Shikasta', 'Suls', 'Hafs'],
-            message: 'the categories can only be at least one of the main categories of Arabic calligraphy'
-        }
+        required: [true, "Post must at least select one categories"]
+        // enum: {
+        //     values: ['Naskh' , 'Thuluth', 'Diwani', 'Ruqa`ah', 'Kufic', 'Maghribi', 'Farsi', 'Ta`liq' , 'Shikasta', 'Suls', 'Hafs'],
+        //     message: 'the categories can only be at least one of the main categories of Arabic calligraphy'
+        // }
     },
     createdAt: {
         type: Date,
@@ -91,8 +91,6 @@ postSchema.pre('findOneAndUpdate', async function(next){
     if(docToUpdate) this.set({updatedAt: new Date()})
     next();
 })
-
-
 
 //build the post schema
 const Post = mongoose.model('Post', postSchema);
