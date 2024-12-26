@@ -13,10 +13,27 @@ const mongoose = require('mongoose')
 const imageProcess = require('../utils/imageUpload'); // Import the reusable function
 const APIFeatures = require('../utils/apiFeatures')
 
+
+//middleware for checking the current user validation to delete or update another user's posts
+exports.checkUser = catchAsync(async (req, res, next)=>{
+    const comment = await Comment.findById(req.params.id);
+
+    if(!comment) return next(new AppError('No comment found with that ID', 400));
+
+    if(comment.user._id.toString() !== req.user.id){
+        return next(new AppError('you do not have the permission for this action', 403));
+    }
+
+    req.comment = comment
+
+    next();
+})
+
+
 exports.updateComment = factory.updateOne(Comment);
 
 exports.deleteComment = catchAsync(async (req, res, next) =>{
-    const comment = await Comment.findById(req.params.id);
+    const comment = req.comment
 
     if(!comment){
         return next(new AppError('No comment found with that id', 404))
