@@ -1,10 +1,16 @@
+//models
 const Comment = require('../models/commentModel')
+const Post = require('../models/postModel')
+const {CommentLikes} = require('../models/likedByModel')
+
+//error and asynchronization handler
 const factory = require('./handlerFactory')
 const catchAsync = require('../utils/catchAsync')
 const AppError = require('../utils/appError')
+
+//utils
 const mongoose = require('mongoose')
 const imageProcess = require('../utils/imageUpload'); // Import the reusable function
-const {CommentLikes} = require('../models/likedByModel')
 const APIFeatures = require('../utils/apiFeatures')
 
 exports.updateComment = factory.updateOne(Comment);
@@ -21,6 +27,9 @@ exports.deleteComment = catchAsync(async (req, res, next) =>{
         await imageProcess.deleteImagesFromCloudinary(comment.photo);
     }
 
+    //updating the number of comments on a post
+    await Post.findByIdAndUpdate(comment.post._id.toString(), { $inc: { comments: -1 } });
+
     //delete the post 
     await Comment.deleteOne({_id: comment._id});
 
@@ -34,13 +43,17 @@ exports.createComment = catchAsync(async (req, res, next) => {
     const postId = req.params.postId
     const userId = req.user.id  
 
+    let uploadedImage;
+
     //check if the files are uploaded
-    if(!req.files || req.files.length === 0){
-        return next(new AppError('No files specified', 400));
+    if(req.files || req.files.length > 0){
+        // Upload the images using the reusable function
+        uploadedImage = await imageProcess.uploadImagesToCloudinary(req.files); 
     }
     
-    // Upload the images using the reusable function
-    const uploadedImage = await imageProcess.uploadImagesToCloudinary(req.files); 
+
+    //updating the number of comments on a post
+    await Post.findByIdAndUpdate(postId, { $inc: { comments: 1 } });
 
     const comment = await Comment.create({
         user: userId,
