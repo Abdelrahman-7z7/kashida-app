@@ -2,6 +2,7 @@
 const Post = require('../models/postModel');
 const {PostLikes} = require('../models/likedByModel');
 const Category = require('../models/categoryModel')
+const User = require('../models/userModel')
 
 //utils for handling errors and loading
 const factory = require('./handlerFactory');
@@ -177,7 +178,7 @@ exports.createPost = catchAsync(async (req, res, next)=> {
         photos: uploadedImages,
         user: req.user.id
     })
-    
+
     //send success response
     res.status(201).json({
         status:'success',
@@ -202,6 +203,10 @@ exports.deletePost = catchAsync(async (req, res, next) =>{
 
     //delete the post 
     await Post.deleteOne({_id: post._id});
+
+    //decreasing the number of posts in the user's info
+    await User.findByIdAndUpdate(req.user.id, { $inc: { posts: -1} });
+
 
     res.status(204).json({
         status: 'success',
