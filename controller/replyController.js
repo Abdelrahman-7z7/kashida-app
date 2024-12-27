@@ -1,10 +1,27 @@
 const Reply = require('../models/replyModel')
+const User = require('../models/userModel')
 const factory = require('./handlerFactory')
 const catchAsync = require('../utils/catchAsync')
 const AppError = require('../utils/appError')
 const mongoose = require('mongoose')
 const APIFeatures = require('../utils/apiFeatures')
 const {ReplyLikes} = require('../models/likedByModel')
+
+exports.checkUser = catchAsync(async (req, res, next) => {
+    const reply = await Reply.findById(req.params.id);
+
+    if(!reply){
+        return next(new AppError('no reply found with that id', 404))
+    }
+
+    if(reply.user._id.toString() !== req.user.id && req.user.role !== 'admin'){
+        return next(new AppError('you do not have permission to do this action', 403))
+    }
+
+    req.reply = reply;
+
+    next()
+})
 
 exports.updateReply = factory.updateOne(Reply);
 exports.deleteReply = factory.deleteOne(Reply);
@@ -84,22 +101,17 @@ exports.getAllReplies = catchAsync(async (req, res, next) => {
     const features = new APIFeatures(Reply.find({comment: commentId}), req.query).filter().pagination();
     const replies = await features.query
 
-    console.log(replies)
-
     //collect the replies IDs
     const replyIds = replies.map(reply => reply._id.toString())
-    console.log(replyIds)
 
     //fetching the likes for the replies
     const userLikes = await ReplyLikes.find({
         userId: currentUser,
         replyId: { $in: replyIds } // match the reply IDs
     })
-    console.log(userLikes)
 
     //create a set of liked reply IDs for quick lookup
     const likedReplyIds = new Set(userLikes.map(like => like.replyId.toString()))
-    console.log(likedReplyIds)
 
     //add hasLiked field to each reply in the replies array
     const replyWithLikeStatus = replies.map(reply => ({
@@ -107,7 +119,6 @@ exports.getAllReplies = catchAsync(async (req, res, next) => {
         hasLiked: likedReplyIds.has(reply._id.toString())
     }))
 
-    console.log(replyWithLikeStatus)
     //send reply
     res.status(200).json({
         status: "success",

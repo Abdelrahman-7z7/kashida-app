@@ -21,7 +21,7 @@ router.route('/')
 
 router.route('/:id')
     .get(replyController.getReplyById)
-    .patch(replyController.updateReply)
-    .delete(replyController.deleteReply)
+    .patch(replyController.checkUser, replyController.updateReply)
+    .delete(replyController.checkUser, replyController.deleteReply)
 
 module.exports = router;
