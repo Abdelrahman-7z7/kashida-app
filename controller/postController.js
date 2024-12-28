@@ -43,7 +43,7 @@ exports.checkUser = catchAsync(async (req, res, next)=>{
     // console.log('Post user:', post.user._id.toString());
     // console.log('Request user:', req.user.id);
 
-    if(post.user._id.toString() !== req.user.id){
+    if(post.user._id.toString() !== req.user.id && req.user.role !== 'admin'){
         return next(new AppError('you do not have the permission for this action', 403));
     }
 

@@ -20,7 +20,7 @@ exports.checkUser = catchAsync(async (req, res, next)=>{
 
     if(!comment) return next(new AppError('No comment found with that ID', 400));
 
-    if(comment.user._id.toString() !== req.user.id){
+    if(comment.user._id.toString() !== req.user.id && req.user.role !== 'admin'){
         return next(new AppError('you do not have the permission for this action', 403));
     }
 
