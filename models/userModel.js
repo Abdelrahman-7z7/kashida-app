@@ -77,6 +77,10 @@ const userSchema = new mongoose.Schema({
     posts:{
         type: Number,
         default: 0
+    },
+    joinedSpaces:{
+        type: [String],
+        default: []
     }
 })
 

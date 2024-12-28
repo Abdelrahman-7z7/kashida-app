@@ -23,6 +23,9 @@ router.get('/me', userController.getMe, userController.getUserById)
 router.patch('/updateMe', configureMulter('photo', 1),userController.updateMe)
 router.delete('/deleteMe', userController.deleteMe)
 router.get('/search/:searchTerm', userController.searchForUser)
+router.get('/mySpaces', userController.getAllJoinedSpaces)
+router.post('/joinSpace', userController.joinSpace)
+router.delete('/unjoinSpace', userController.unjoinSpace)
 
 router.use(authController.restrictTo('admin')) 
 
@@ -34,6 +37,8 @@ router.route('/:id')
     .get(userController.getUserById)
     .patch(userController.updateUser)
     .delete(userController.deleteUser)
+
+router.post('/cleanUpJoinedSpaces', userController.cleanUpJoinedSpaces)
 
 
 

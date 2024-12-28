@@ -1,4 +1,5 @@
 const User = require('../models/userModel')
+const Category = require('../models/categoryModel')
 const factory = require('./handlerFactory')
 const catchAsync = require('../utils/catchAsync')
 const AppError = require('../utils/appError')
@@ -123,3 +124,108 @@ exports.searchForUser = catchAsync(async (req, res, next)=>{
     })
 })
 
+//getting all the joinedSpaces 
+exports.getAllJoinedSpaces = catchAsync(async (req, res, next)=>{
+    //fetch all the joinedSpaces(category) for the current user
+    const user = await User.findById(req.user.id).select('joinedSpaces')
+
+    //check if the user exists
+    if(!user){
+        return next(new AppError('User not found', 404))
+    }
+
+    //send response of the joined spaces
+    res.status(200).json({
+        status: 'success',
+        data:{
+            joinedSpaces: user.joinedSpaces
+        }
+    })
+})
+
+//join space 
+exports.joinSpace = catchAsync(async (req, res, next) => {
+    //fetch the space name(category) name
+    const {categoryName} = req.body;
+
+    //validate that the category exists
+    const category = await Category.findOne({name: categoryName.trim()})
+
+    //check if the category exists
+    if(!category){
+        return next(new AppError('No category found', 404))
+    }
+
+    //Add the category name to the joinedSpaces if not already exists
+    const user = await User.findByIdAndUpdate(
+        req.user.id,
+        {
+            $addToSet: {joinedSpaces: category.name} //adds to the array if it doesn't already exist
+        },
+        {
+            new: true,
+            runValidators: true //skipping the validation
+        }
+    )
+
+    res.status(200).json({
+        status: 'success',
+        data:{
+            joinedSpaces: user.joinedSpaces
+        }
+    })
+})
+
+//unjoin space
+exports.unjoinSpace = catchAsync(async (req, res, next)=> {
+    //fetch the space name(category)
+    const {categoryName} = req.body;
+
+    //remove the space (categoryName) from joinedSpaces if it exists
+    const user = await User.findByIdAndUpdate(
+        req.user.id,
+        {
+            $pull: {joinedSpaces: categoryName.trim()}
+        },
+        {
+            new: true, //return the updated user document
+            runValidators: true //skipping the validation
+        }
+    )
+
+    //send response of the joined spaces
+    res.status(200).json({
+        status:'success',
+        data:{
+            joinedSpaces: user.joinedSpaces
+        }
+    })
+})
+
+//periodically cleanup by the admin for the joinedSpaces based on the category model
+exports.cleanUpJoinedSpaces = catchAsync(async (req, res, next)=>{
+    const validCategories = await Category.find().select('name')
+    const validCategoryNames = validCategories.map(cat => cat.name)
+
+    const users = await User.find()
+
+    //loop through each user and update the joinedSpaces array
+    for(const user of await User.find()){
+        //remove invalid categories from the user's joinedSpaces
+        const updatedUser = await User.findByIdAndUpdate(
+            user._id,
+            {
+                $pull: {joinedSpaces: {$nin: validCategoryNames}} //remove category not in the validCategoryNames
+            },
+            {
+                new: true, //return the updated user document
+                runValidators: true //skipping the validation
+            }
+        )
+    }
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Data cleanup completed successfully'
+    })
+})
