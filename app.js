@@ -19,29 +19,15 @@ const categoryRoute = require('./routes/categoryRoute')
 // Express app setup
 const app = express()
 
-
-//middleware to parse JSON request bodies
-app.use(express.json())
-
-//logging middleware
-if(process.env.NODE_ENV.trim() === 'development'){
-    app.use(morgan('dev'))
-}
+/** ==================
+ *   SECURITY MIDDLEWARE
+ * ================== */
 
 //A collection of middleware to set HTTP headers for security
 app.use(helmet())
 
 //middleware for sanitizing user inputs to prevent XSS attacks
 app.use(xss())
-
-//For configuring Cross-Origin Resource Sharing (CORS) policies to restrict API access
-//TODO: we should apply this when we have the front-end-domain available
-// app.use(cors(
-//     {
-//         origin: 'https://your-frontend-domain.com',
-//         methods: ['GET', 'POST', 'PATCH', 'DELETE']
-//     }
-// ))
 
 //To limit the number of requests a client can make in a given time frame. (protecting against server denial attacks)
 //TODO:applying redis later
@@ -56,6 +42,32 @@ app.use('/api', limiter)
 
 //Middleware to prevent HTTP Parameter Pollution.
 app.use(hpp())
+
+/** ==================
+ *   GENERAL MIDDLEWARE
+ * ================== */
+
+//middleware to parse JSON request bodies
+app.use(express.json())
+
+//For configuring Cross-Origin Resource Sharing (CORS) policies to restrict API access
+//TODO: we should apply this when we have the front-end-domain available
+// app.use(cors(
+//     {
+//         origin: 'https://your-frontend-domain.com',
+//         methods: ['GET', 'POST', 'PATCH', 'DELETE']
+//     }
+// ))
+
+//logging middleware
+if(process.env.NODE_ENV.trim() === 'development'){
+    app.use(morgan('dev'))
+}
+
+
+
+
+
 
 //testing purposes
 // app.get('/', (req, res, next)=>{
@@ -72,6 +84,11 @@ app.use(hpp())
 //     next();
 // })
 
+
+/** ==================
+ *   ROUTES
+ * ================== */
+
 app.use('/api/k1/posts', postRoute);
 app.use('/api/k1/comments', commentRoute);
 app.use('/api/k1/replies', replyRoute);
@@ -79,6 +96,10 @@ app.use('/api/k1/users', userRoute);
 app.use('/api/k1/', LikedByRoute);
 app.use('/api/k1/follow', followRoute);
 app.use('/api/k1/category', categoryRoute);
+
+/** ==================
+ *   ERROR HANDLING
+ * ================== */
 
 //reaching this point refers to having an error
 // ## using global-error-handler from errorController ##

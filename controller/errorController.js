@@ -36,6 +36,19 @@ const handlingJWTExpiredError = () => {
     return (new AppError(message, 401));
 }
 
+// Handling Multer errors
+const handleMulterError = (err) => {
+    let message;
+    if (err.code === 'LIMIT_FILE_SIZE') {
+        message = 'File size exceeds the maximum limit of 10MB.';
+    } else if (err.code === 'LIMIT_FILE_TYPE') {
+        message = err.field; // Using the custom error message from multer.js
+    } else {
+        message = 'An error occurred during file upload.';
+    }
+    return new AppError(message, 400); // Multer errors should return a 400 Bad Request
+};
+
 
 //handling production env error
 const sendErrorProd = (err, res) => {
@@ -103,6 +116,9 @@ module.exports = (err, req, res, next) => {
 
         //handling expires token
         if(error.name === "TokenExpiredError") error = handlingJWTExpiredError(err, res);
+
+        // **Handle MulterError**
+        if (error.name === 'MulterError') error = handleMulterError(err);
         
         //sending the caught error from production mode
         sendErrorProd(error, res)
