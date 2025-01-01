@@ -3,6 +3,7 @@ const morgan = require('morgan')
 const globalErrorHandling = require('./controller/errorController')
 const helmet = require('helmet')
 const xss = require('xss-clean')
+const cors = require('cors')
 
 //Routes
 const postRoute = require('./routes/postRoute')
@@ -30,6 +31,15 @@ app.use(helmet())
 
 //middleware for sanitizing user inputs to prevent XSS attacks
 app.use(xss())
+
+//For configuring Cross-Origin Resource Sharing (CORS) policies to restrict API access
+//TODO: we should apply this when we have the front-end-domain available
+// app.use(cors(
+//     {
+//         origin: 'https://your-frontend-domain.com',
+//         methods: ['GET', 'POST', 'PATCH', 'DELETE']
+//     }
+// ))
 
 //testing purposes
 // app.get('/', (req, res, next)=>{
