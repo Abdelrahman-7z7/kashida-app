@@ -2,6 +2,7 @@ const express = require('express')
 const morgan = require('morgan')
 const globalErrorHandling = require('./controller/errorController')
 const helmet = require('helmet')
+const xss = require('xss-clean')
 
 //Routes
 const postRoute = require('./routes/postRoute')
@@ -27,7 +28,8 @@ if(process.env.NODE_ENV.trim() === 'development'){
 //A collection of middleware to set HTTP headers for security
 app.use(helmet())
 
-
+//middleware for sanitizing user inputs to prevent XSS attacks
+app.use(xss())
 
 //testing purposes
 // app.get('/', (req, res, next)=>{
