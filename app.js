@@ -5,6 +5,7 @@ const helmet = require('helmet')
 const xss = require('xss-clean')
 const cors = require('cors')
 const rateLimit = require('express-rate-limit')
+const hpp = require('hpp')
 
 //Routes
 const postRoute = require('./routes/postRoute')
@@ -52,6 +53,9 @@ const limiter = rateLimit({
 })
 
 app.use('/api', limiter)
+
+//Middleware to prevent HTTP Parameter Pollution.
+app.use(hpp())
 
 //testing purposes
 // app.get('/', (req, res, next)=>{
