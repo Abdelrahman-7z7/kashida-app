@@ -96,6 +96,7 @@ postSchema.pre('findOneAndUpdate', async function(next){
     next();
 })
 
+
 //build the post schema
 const Post = mongoose.model('Post', postSchema);
 module.exports = Post;

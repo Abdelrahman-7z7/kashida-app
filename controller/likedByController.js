@@ -18,6 +18,19 @@ exports.getLike = catchAsync(async (req, res, next) => {
     })
 })
 
+//get all posts that the user has liked in a collection using middleware for population
+exports.getAllLikedPosts = catchAsync(async (req, res, next)=>{
+    //fetch all posts that has the user id
+    const likedPosts = await PostLikes.find({userId: req.user.id});
+
+    //send response
+    res.status(200).json({
+        status:'success',
+        data: {
+            likedPosts
+        }
+    })
+})
 
 //like post
 exports.likePost = catchAsync(async (req, res, next) => {

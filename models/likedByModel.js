@@ -15,6 +15,9 @@ const postLikeSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+},{
+    toJSON: {virtuals: true},
+    toObject: {virtuals: true}
 })
 
 const commentLikeSchema = new mongoose.Schema({
@@ -32,6 +35,9 @@ const commentLikeSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+},{
+    toJSON: {virtuals: true},
+    toObject: {virtuals: true}
 })
 
 const replyLikeSchema = new mongoose.Schema({
@@ -49,11 +55,26 @@ const replyLikeSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+},{
+    toJSON: {virtuals: true},
+    toObject: {virtuals: true}
 })
 
 postLikeSchema.index({postId: 1, userId: 1}, {unique: true})
 commentLikeSchema.index({commentId: 1, userId: 1}, {unique: true})
 replyLikeSchema.index({replyId: 1, userId: 1}, {unique: true})
+
+//query middleware for populating the posts
+postLikeSchema.pre(/^find/, function(next){
+    this.populate({
+        path: 'postId',
+        options: {
+            sort: { createdAt: -1 }
+        }
+    })
+    next();
+})
+
 
 const PostLikes = mongoose.model('PostLikes', postLikeSchema)
 const CommentLikes = mongoose.model('CommentLikes', commentLikeSchema);
