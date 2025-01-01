@@ -4,6 +4,7 @@ const globalErrorHandling = require('./controller/errorController')
 const helmet = require('helmet')
 const xss = require('xss-clean')
 const cors = require('cors')
+const rateLimit = require('express-rate-limit')
 
 //Routes
 const postRoute = require('./routes/postRoute')
@@ -40,6 +41,17 @@ app.use(xss())
 //         methods: ['GET', 'POST', 'PATCH', 'DELETE']
 //     }
 // ))
+
+//To limit the number of requests a client can make in a given time frame. (protecting against server denial attacks)
+//TODO:applying redis later
+const limiter = rateLimit({
+    windowMs: 60* 1000, // 1 minute interval
+    max: 100,   // 100 requests per user
+    message: "Too many requests, please try again later",
+    headers: true
+})
+
+app.use('/api', limiter)
 
 //testing purposes
 // app.get('/', (req, res, next)=>{
