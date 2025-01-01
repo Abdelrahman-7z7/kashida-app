@@ -1,6 +1,7 @@
 const express = require('express')
 const morgan = require('morgan')
 const globalErrorHandling = require('./controller/errorController')
+const helmet = require('helmet')
 
 //Routes
 const postRoute = require('./routes/postRoute')
@@ -22,6 +23,10 @@ app.use(express.json())
 if(process.env.NODE_ENV.trim() === 'development'){
     app.use(morgan('dev'))
 }
+
+//A collection of middleware to set HTTP headers for security
+app.use(helmet())
+
 
 
 //testing purposes
