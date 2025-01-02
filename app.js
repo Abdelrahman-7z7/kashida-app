@@ -6,7 +6,8 @@ const xss = require('xss-clean')
 const cors = require('cors')
 const rateLimit = require('express-rate-limit')
 const hpp = require('hpp')
-const csurf = require('csurf')
+// const csrf = require('csurf')
+// const cookieParser = require('cookie-parser');
 
 //Routes
 const postRoute = require('./routes/postRoute')
@@ -33,8 +34,8 @@ app.use(xss())
 //To limit the number of requests a client can make in a given time frame. (protecting against server denial attacks)
 //TODO:applying redis later
 const limiter = rateLimit({
-    windowMs: 60* 1000, // 1 minute interval
-    max: 100,   // 100 requests per user
+    windowMs: process.env.RATE_LIMIT_WINDOW_MS, // interval
+    max: process.env.RATE_LIMIT_MAX,   // max requests per user
     message: "Too many requests, please try again later",
     headers: true
 })
@@ -44,11 +45,27 @@ app.use('/api', limiter)
 //Middleware to prevent HTTP Parameter Pollution.
 app.use(hpp())
 
-// Set up csrf protection middleware
-const csrfProtection = csrf({ cookie: true });
+//Prevent the app from being embedded in iframes to protect against clickjacking attacks
+app.use(helmet.frameguard({action: 'deny'}))
 
-// Use it in routes that need CSRF protection
-app.use(csrfProtection);
+app.use(helmet({
+    noCache: true, //Prevent caching of sensitive data
+    dnsPrefetchControl: {allow: false}, //Prevent DNS prefetching
+    xContentTypeOptions: true //Prevent MIME sniffing attacks
+}))
+
+//Enforcing a referred policy to limit the information sent with external requests
+app.use(helmet.referrerPolicy({policy: 'no-referrer'}))
+
+//TODO: to be added later
+// //parse cookies
+// app.use(cookieParser())
+
+// // Set up csrf protection middleware
+// const csrfProtection = csrf({ cookie: true });
+
+// // Use it in routes that need CSRF protection
+// app.use(csrfProtection);
 
 /** ==================
  *   GENERAL MIDDLEWARE
@@ -62,7 +79,8 @@ app.use(express.json())
 // app.use(cors(
 //     {
 //         origin: 'https://your-frontend-domain.com',
-//         methods: ['GET', 'POST', 'PATCH', 'DELETE']
+//         methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+//         credentials: true,  // Allows cookies to be sent across different origins
 //     }
 // ))
 
