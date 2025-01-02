@@ -6,6 +6,7 @@ const xss = require('xss-clean')
 const cors = require('cors')
 const rateLimit = require('express-rate-limit')
 const hpp = require('hpp')
+const csurf = require('csurf')
 
 //Routes
 const postRoute = require('./routes/postRoute')
@@ -43,6 +44,12 @@ app.use('/api', limiter)
 //Middleware to prevent HTTP Parameter Pollution.
 app.use(hpp())
 
+// Set up csrf protection middleware
+const csrfProtection = csrf({ cookie: true });
+
+// Use it in routes that need CSRF protection
+app.use(csrfProtection);
+
 /** ==================
  *   GENERAL MIDDLEWARE
  * ================== */
@@ -63,10 +70,6 @@ app.use(express.json())
 if(process.env.NODE_ENV.trim() === 'development'){
     app.use(morgan('dev'))
 }
-
-
-
-
 
 
 //testing purposes
