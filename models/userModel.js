@@ -78,6 +78,33 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    birthday:{
+        type: Date,
+        validate: {
+            validator: function(birthday){
+                //Ensure the date is valid
+                const isValid = !isNaN(new Date(birthday).getTime())
+
+                //Ensure the date is not in the future
+                const isNotInFuture = new Date(birthday) <= Date.now()
+
+                //ensure it is a valid date and not in the future
+                return isValid && isNotInFuture
+            },
+            message: "Please provide a valid birthday in the format of YYYY-MM-DD and ensure it is not in the future"
+        },
+        required: false,
+    },
+    phoneNumber:{
+        type: String,
+        validate: {
+            validator: function(phone){
+                return /^\+[1-9]\d{1,14}$/.test(phone);
+            },
+            message: 'Please provide a valid phone number'
+        },
+        required: false
+    },
     joinedSpaces:{
         type: [String],
         default: []

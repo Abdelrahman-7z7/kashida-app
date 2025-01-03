@@ -38,7 +38,7 @@ exports.updateMe = catchAsync( async (req, res, next) => {
     }
 
     // 2) using the filterObj method to filter the req.body data
-    const filteredBody = filterObj(req.body, 'name', 'username', 'bio', 'photo')
+    const filteredBody = filterObj(req.body, 'name', 'username', 'bio', 'photo', 'birthday', 'phoneNumber')
 
     // 3) Handle image deletion and upload
     if (req.files && req.files[0]?.fieldname === 'photo') {
