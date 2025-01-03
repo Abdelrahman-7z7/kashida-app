@@ -29,4 +29,6 @@ router.route('/:id')
 
 router.get('/search/:searchTerm', postController.searchPost)
 
+router.post('/report', postController.sendReport)
+
 module.exports = router;

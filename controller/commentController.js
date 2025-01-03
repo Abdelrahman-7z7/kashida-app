@@ -32,6 +32,9 @@ exports.checkUser = catchAsync(async (req, res, next)=>{
 
 exports.updateComment = factory.updateOne(Comment);
 
+//sending a report on a comment
+exports.sendReport = factory.sendReport(Comment);
+
 exports.deleteComment = catchAsync(async (req, res, next) =>{
     const comment = req.comment
 

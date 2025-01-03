@@ -24,4 +24,6 @@ router.route('/:id')
     .patch(replyController.checkUser, replyController.updateReply)
     .delete(replyController.checkUser, replyController.deleteReply)
 
+router.post('/report', replyController.sendReport)
+
 module.exports = router;

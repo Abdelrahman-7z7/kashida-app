@@ -53,6 +53,9 @@ exports.checkUser = catchAsync(async (req, res, next)=>{
 })
 
 
+//exports for sending a report over a post
+exports.sendReport = factory.sendReport(Post)
+
 // exports.getAllPost = factory.getAll(Post);
 exports.getAllPost = catchAsync(async (req, res, next) => {
     const userId = req.user.id; // Assuming the user's ID is available on `req.user`

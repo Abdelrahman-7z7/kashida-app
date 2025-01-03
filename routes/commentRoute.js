@@ -30,5 +30,6 @@ router.route('/:id')
     .patch(commentController.checkUser, commentController.updateComment)
     .delete(commentController.checkUser, commentController.deleteComment);
 
+router.post('/report', commentController.sendReport)
 
 module.exports = router;

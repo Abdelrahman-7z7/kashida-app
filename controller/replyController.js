@@ -26,6 +26,9 @@ exports.checkUser = catchAsync(async (req, res, next) => {
 exports.updateReply = factory.updateOne(Reply);
 exports.deleteReply = factory.deleteOne(Reply);
 
+//sending a report over a reply
+exports.sendReport = factory.sendReport(Reply);
+
 exports.createReply = catchAsync(async (req, res, next)=>{
     const commentId = req.params.commentId
     const userId = req.user.id
