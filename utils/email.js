@@ -1,39 +1,3 @@
-// const nodemailer = require('nodemailer')
-
-//for testing at first-lookup development phase 
-// const sendEmail = async options => {
-//     // 1) create a transporter
-//     const transporter = nodemailer.createTransport({
-//         //in case we need to use gmail
-//         // service: 'Gmail',
-//         // auth: {
-//         //     user: process.env.EMAIL_ADDRESS,
-//         //     pass: process.env.EMAIL_PASSWORD
-//         // }
-
-//         //using mailtrap
-//         host: process.env.EMAIL_HOST,
-//         port: process.env.EMAIL_PORT,
-//         auth: {
-//             user: process.env.EMAIL_USERNAME,
-//             pass: process.env.EMAIL_PASSWORD
-//         }
-//     })
-
-//     // 2) Define the email options
-//     const mailOptions = {
-//         from: 'Kashida <kashidaapp@gmail.com>',
-//         to: options.email,
-//         subject: options.subject,
-//         text: options.message
-//     }
-
-//     // 3) Actually send the email
-//     await transporter.sendMail(mailOptions)
-// }
-
-// module.exports = sendEmail;
-
 const nodemailer = require('nodemailer');
 const htmlToText = require('html-to-text');
 
@@ -49,8 +13,8 @@ module.exports = class Email {
     if (process.env.NODE_ENV.trim() === 'production') {
       // Brevo SMTP Configuration for production
       return nodemailer.createTransport({
-        host: 'smtp-relay.brevo.com',
-        port: 587, // Use 465 for SSL or 587 for TLS
+        host: process.env.BREVO_HOST,
+        port: process.env.BREVO_PORT, // Use 465 for SSL or 587 for TLS
         auth: {
           user: process.env.BREVO_EMAIL,
           pass: process.env.BREVO_PASSWORD
@@ -109,5 +73,23 @@ module.exports = class Email {
       </div>
     `;
     await this.send('Password Reset Request', htmlContent);
+  }
+
+  async sendReport(reportType, reportId, reporterName) {
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <h1>New Report Received</h1>
+        <p>Hello Admin,</p>
+        <p>A new report has been submitted:</p>
+        <ul>
+          <li><strong>Report Type:</strong> ${reportType}</li>
+          <li><strong>Report ID:</strong> ${reportId}</li>
+          <li><strong>Reporter:</strong> ${reporterName}</li>
+        </ul>
+        <p>Please review the report and take necessary action.</p>
+        <p>Best regards,<br>Your Social App</p>
+      </div>
+    `;
+    await this.send(`New Report: ${reportType}`, htmlContent);
   }
 };
