@@ -4,6 +4,7 @@ const statusCode = require("../utils/statusCode");
 const { Model } = require("mongoose");
 const User = require('../models/userModel');
 const APIFeatures = require("../utils/apiFeatures");
+const Email = require('../utils/email')
 
 exports.getAll = (Model, popOptions) => catchAsync(async (req, res, next) => {
     
@@ -111,6 +112,31 @@ exports.getOne = (Model, popOptions) => catchAsync(async (req, res, next)=> {
         data: {
             data: doc
         }
+    })
+})
+
+exports.sendReport = Model => catchAsync(async (req, res, next)=>{
+    const {reportType, reportId} = req.body; //expecting reportType and reportId in the body
+    const reporter = req.user
+
+    //validate the reported item exists
+    const reportedItem = await Model.findById(reportId)
+
+    if(!reportedItem){
+        return next(new AppError('No document found with that id', 404))
+    }
+
+    //send report email
+    // const email = new Email({ email: process.env.ADMIN_EMAIL, username: 'Admin'})
+    // console.log(email)
+    // console.log(reportType, reportId)
+    // await email.sendReport(reportType, reportId, reporter.username)
+    await new Email({email: process.env.ADMIN_EMAIL, username: 'ADMIN'}).sendReport(reportType, reportId, reporter.username)
+
+    //send response
+    res.status(200).json({
+        status:'success',
+        message: 'Report sent successfully'
     })
 })
 
