@@ -7,7 +7,7 @@ const replyRoute = require('./replyRoute')
 //controller
 const commentController = require('../controller/commentController')
 const authController = require('../controller/authController')
-const configureMulter = require('../utils/multer')
+const {configureMulter} = require('../utils/multer')
 
 //init the app
 const router = express.Router({mergeParams: true});

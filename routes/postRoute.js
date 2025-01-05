@@ -7,7 +7,7 @@ const commentRoute = require('./commentRoute')
 //controller
 const postController = require('../controller/postController')
 const authController = require('../controller/authController')
-const configureMulter = require('../utils/multer')
+const {configureMulter} = require('../utils/multer')
 
 const router = express.Router();
 
