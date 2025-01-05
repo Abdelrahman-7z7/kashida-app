@@ -6,6 +6,7 @@ const AppError = require('../utils/appError')
 const mongoose = require('mongoose')
 const APIFeatures = require('../utils/apiFeatures')
 const {ReplyLikes} = require('../models/likedByModel')
+const Comment = require('../models/commentModel')
 
 exports.checkUser = catchAsync(async (req, res, next) => {
     const reply = await Reply.findById(req.params.id);
@@ -26,6 +27,21 @@ exports.checkUser = catchAsync(async (req, res, next) => {
 exports.updateReply = factory.updateOne(Reply);
 exports.deleteReply = factory.deleteOne(Reply);
 
+exports.deleteReply = catchAsync(async (req, res, next)=>{
+    const reply = await Reply.findByIdAndDelete(req.params.id);
+    
+    if(!reply){
+        return next(new AppError('no reply found with that id', 404))
+    }
+    
+    await Comment.findByIdAndUpdate(reply.comment, { $inc: { reply: -1 } })
+
+    res.status(204).json({
+        status: 204,
+        message: 'Reply deleted successfully'
+    })
+});
+
 //sending a report over a reply
 exports.sendReport = factory.sendReport(Reply);
 
@@ -33,11 +49,20 @@ exports.createReply = catchAsync(async (req, res, next)=>{
     const commentId = req.params.commentId
     const userId = req.user.id
 
+    const comment = await Comment.findById(commentId);
+
+    if(!comment){
+        return next(new AppError('no comment found with that id', 404))
+    }
+
     const reply = await Reply.create({
         comment: commentId,
         user: userId,
         reply: req.body.reply
     })
+
+    // Increment the reply count in the comment
+    await Comment.findByIdAndUpdate(commentId, { $inc: { reply: 1 } });
 
     res.status(201).json({
         status: 201,
@@ -131,68 +156,6 @@ exports.getAllReplies = catchAsync(async (req, res, next) => {
         },
     })
 })
-
-// exports.getAllReplies = catchAsync(async (req, res, next) => {
-//     const currentUser = req.user.id;
-//     const commentId = req.params.commentId;
-
-//     // Set up the pagination options
-//     const page = req.query.page || 1;
-//     const limit = req.query.limit || 10;
-//     const skip = (page - 1) * limit;
-
-//     // Aggregation pipeline to fetch replies and their like status
-//     const replies = await Reply.aggregate([
-//         // Match the replies for the specific comment
-//         { $match: { comment: commentId } },
-        
-//         // Perform a lookup to join the 'ReplyLikes' collection
-//         {
-//             $lookup: {
-//                 from: 'replylikes', // The collection name for likes
-//                 localField: '_id',
-//                 foreignField: 'replyId',
-//                 as: 'likes' // This will create an array of likes for each reply
-//             }
-//         },
-        
-//         // Add a field to check if the current user has liked the reply
-//         {
-//             $addFields: {
-//                 hasLiked: {
-//                     $in: [currentUser, { $map: { input: '$likes.userId', as: 'userId', in: '$$userId' } }]
-//                 }
-//             }
-//         },
-
-//         // Apply pagination using skip and limit
-//         { $skip: skip },
-//         { $limit: limit },
-
-//         // Optionally, you can project only the fields you need
-//         {
-//             $project: {
-//                 _id: 1,
-//                 content: 1, // assuming a 'content' field in the reply
-//                 hasLiked: 1,
-//                 // include other fields as necessary
-//             }
-//         }
-//     ]);
-
-//     // Get the total count of replies (without pagination)
-//     const totalReplies = await Reply.countDocuments({ comment: commentId });
-
-//     res.status(200).json({
-//         status: 'success',
-//         results: replies.length,
-//         totalResults: totalReplies, // Return total count for pagination
-//         data: {
-//             replies, // Return the replies with the 'hasLiked' field
-//         },
-//     });
-// });
-
 
 exports.getReplyById = catchAsync(async (req, res, next) => {
     const replyId = req.params.id; // Extract replyId from request parameters
