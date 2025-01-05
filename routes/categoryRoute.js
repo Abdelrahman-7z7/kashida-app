@@ -3,6 +3,7 @@ const express = require('express')
 //controller
 const categoryController = require('../controller/categoryController')
 const authController = require('../controller/authController')
+const {configureMulterForCategory} = require('../utils/multer')
 
 const router = express.Router()
 
@@ -14,9 +15,38 @@ router.get('/', categoryController.getAllCategories)
 //restricting the creation, updating and deletion of category to the admin only
 router.use(authController.restrictTo('admin'))
 
-router.post('/', categoryController.createCategory)
+router.post('/', configureMulterForCategory([
+    {
+        name: 'followedImg',
+        maxCount: 1
+    },
+    {
+        name: 'unfollowedImg',
+        maxCount: 1
+    },
+    {
+        name: 'logo',
+        maxCount: 1
+    }
+]),categoryController.createCategory)
+
 router.route('/:id')
-    .patch(categoryController.updateCategory)
+    .patch(
+        configureMulterForCategory([
+            {
+                name: 'followedImg',
+                maxCount: 1
+            },
+            {
+                name: 'unfollowedImg',
+                maxCount: 1
+            },
+            {
+                name: 'logo',
+                maxCount: 1
+            }
+        ])
+        ,categoryController.updateCategory)
     .delete(categoryController.deleteCategory)
 
 

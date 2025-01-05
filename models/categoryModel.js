@@ -12,6 +12,18 @@ const categorySchema = new mongoose.Schema({
     createdAt:{
         type: Date,
         default: Date.now
+    },
+    followedImg:{
+        type: Array,
+        default: []
+    },
+    unfollowedImg:{
+        type: Array,
+        default: []
+    },
+    logo:{
+        type: Array, 
+        default: []
     }
 })
 
