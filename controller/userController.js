@@ -38,7 +38,13 @@ exports.updateMe = catchAsync( async (req, res, next) => {
     }
 
     // 2) using the filterObj method to filter the req.body data
-    const filteredBody = filterObj(req.body, 'name', 'username', 'bio', 'photo', 'birthday', 'phoneNumber')
+    const filteredBody = filterObj(req.body, 'name', 'username', 'bio', 'photo', 'birthday', 'phoneNumber', 'role')
+
+    console.log(filteredBody.name, filteredBody.role)
+
+    if(filteredBody.role.toLowerCase() === 'admin'){
+        return next(new AppError('You cannot update your role as admin', 400))
+    }
 
     // 3) Handle image deletion and upload
     if (req.files && req.files[0]?.fieldname === 'photo') {
