@@ -105,8 +105,19 @@ const userSchema = new mongoose.Schema({
         },
         required: false
     },
+    emailVerification:{
+        type: Boolean,
+        default: false
+    },
+    emailVerificationCode: String,
+    emailVerificationExpires: Date,
+    pendingEmail: String,
     joinedSpaces:{
-        type: [String],
+        type: [
+            {
+                name: {type: String, required: true}
+            }
+        ],
         default: []
     }
 })

@@ -153,6 +153,7 @@ exports.getAllJoinedSpaces = catchAsync(async (req, res, next)=>{
 exports.joinSpace = catchAsync(async (req, res, next) => {
     //fetch the space name(category) name
     const {categoryName} = req.body;
+    const userInfo = req.user;
 
     //validate that the category exists
     const category = await Category.findOne({name: categoryName.trim()})
@@ -162,11 +163,17 @@ exports.joinSpace = catchAsync(async (req, res, next) => {
         return next(new AppError('No category found', 404))
     }
 
+    // Check if the category is already in the joinedSpaces array
+    const alreadyJoined = userInfo.joinedSpaces.some(space => space.name === category.name);
+    if (alreadyJoined) {
+        return next(new AppError('Category already joined', 400));
+    }
+
     //Add the category name to the joinedSpaces if not already exists
     const user = await User.findByIdAndUpdate(
         req.user.id,
         {
-            $addToSet: {joinedSpaces: category.name} //adds to the array if it doesn't already exist
+            $push: {joinedSpaces: {name: category.name}} //adds to the array if it doesn't already exist
         },
         {
             new: true,
@@ -191,7 +198,7 @@ exports.unjoinSpace = catchAsync(async (req, res, next)=> {
     const user = await User.findByIdAndUpdate(
         req.user.id,
         {
-            $pull: {joinedSpaces: categoryName.trim()}
+            $pull: {joinedSpaces: {name: categoryName.trim()}}
         },
         {
             new: true, //return the updated user document
@@ -218,10 +225,10 @@ exports.cleanUpJoinedSpaces = catchAsync(async (req, res, next)=>{
     //loop through each user and update the joinedSpaces array
     for(const user of await User.find()){
         //remove invalid categories from the user's joinedSpaces
-        const updatedUser = await User.findByIdAndUpdate(
+        await User.findByIdAndUpdate(
             user._id,
             {
-                $pull: {joinedSpaces: {$nin: validCategoryNames}} //remove category not in the validCategoryNames
+                $pull: {joinedSpaces: {name: {$nin: validCategoryNames}}} //remove category not in the validCategoryNames
             },
             {
                 new: true, //return the updated user document
