@@ -2,7 +2,7 @@ const express = require('express')
 
 const authController = require('../controller/authController')
 const userController = require('../controller/userController')
-const configureMulter = require('../utils/multer')
+const {configureMulter} = require('../utils/multer')
 
 const router = express.Router()
 
