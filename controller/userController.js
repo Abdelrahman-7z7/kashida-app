@@ -83,53 +83,51 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
 
 
 
-exports.getAllUser = factory.getAll(User);
-exports.getUserById = factory.getOne(User);
-exports.updateUser = factory.updateOne(User);
-exports.deleteUser = factory.deleteOne(User);
-
-exports.createNewUser = (req, res) => {
-    res.status(500).json({
-        status: 'fail',
-        message: 'Server Error - this route will never be defined. Please use /signup instead'
-    })
-};
-
 //search for user by name or username
 //ex: api/users/search/ah?page=1&limit=2 
 //we can limit the search of the users by pa
-exports.searchForUser = catchAsync(async (req, res, next)=>{
-    //fetch the searchTerm parameter
-    const {searchTerm} = req.params; // searchTerm == username or name 
+exports.searchForUser = catchAsync(async (req, res, next) => {
+    // Fetch the searchTerm parameter
+    const { searchTerm } = req.params; // searchTerm == username or name
 
-    //check parameter availability
-    if(!searchTerm){
-        return next(new AppError('Please provide a username to search for.', 400))
+    // Check parameter availability
+    if (!searchTerm) {
+        return next(new AppError('Please provide a search term to search users for.', 400));
     }
 
-    //APIFeatures
-    const features = new APIFeatures(User.find({
-        $or: [
-            {username: {$regex: `${searchTerm}`, $options: 'i'}}, //search in username (case insensitive)
-            {name: {$regex: `${searchTerm}`, $options: 'i'}} //search in name (case insensitive)
-        ]
-    }), req.query)
-    .filter()
-    .sort()
-    .limitFields()
-    .pagination();
+    // Split the searchTerm into words
+    const searchWords = searchTerm.split(/\s+/);
 
+    // Build regex for each word to match in username or name
+    const regexConditions = searchWords.map(word => ({
+        $or: [
+            { username: { $regex: word, $options: 'i' } }, // Search in username (case insensitive)
+            { name: { $regex: word, $options: 'i' } } // Search in name (case insensitive)
+        ]
+    }));
+
+    // Use APIFeatures to handle filtering, sorting, field limiting, and pagination
+    const features = new APIFeatures(
+        User.find({ $or: regexConditions }),
+        req.query
+    )
+        .filter()
+        .sort()
+        .limitFields()
+        .pagination();
+
+    // Execute the query
     const users = await features.query;
 
-    //response with the found users and it can be empty determine that no user is found
+    // Respond with the found users
     res.status(200).json({
         status: 'success',
-        result: users.length,
-        data:{
+        results: users.length,
+        data: {
             users
         }
-    })
-})
+    });
+});
 
 //getting all the joinedSpaces 
 exports.getAllJoinedSpaces = catchAsync(async (req, res, next)=>{
@@ -140,7 +138,7 @@ exports.getAllJoinedSpaces = catchAsync(async (req, res, next)=>{
     if(!user){
         return next(new AppError('User not found', 404))
     }
-
+    
     //send response of the joined spaces
     res.status(200).json({
         status: 'success',
@@ -163,13 +161,13 @@ exports.joinSpace = catchAsync(async (req, res, next) => {
     if(!category){
         return next(new AppError('No category found', 404))
     }
-
+    
     // Check if the category is already in the joinedSpaces array
     const alreadyJoined = userInfo.joinedSpaces.some(space => space.name === category.name);
     if (alreadyJoined) {
         return next(new AppError('Category already joined', 400));
     }
-
+    
     //Add the category name to the joinedSpaces if not already exists
     const user = await User.findByIdAndUpdate(
         req.user.id,
@@ -194,7 +192,7 @@ exports.joinSpace = catchAsync(async (req, res, next) => {
 exports.unjoinSpace = catchAsync(async (req, res, next)=> {
     //fetch the space name(category)
     const {categoryName} = req.body;
-
+    
     //remove the space (categoryName) from joinedSpaces if it exists
     const user = await User.findByIdAndUpdate(
         req.user.id,
@@ -243,3 +241,17 @@ exports.cleanUpJoinedSpaces = catchAsync(async (req, res, next)=>{
         message: 'Data cleanup completed successfully'
     })
 })
+
+
+//restricted functionality to the admin only
+exports.getAllUser = factory.getAll(User);
+exports.getUserById = factory.getOne(User);
+exports.updateUser = factory.updateOne(User);
+exports.deleteUser = factory.deleteOne(User);
+
+exports.createNewUser = (req, res) => {
+    res.status(500).json({
+        status: 'fail',
+        message: 'Server Error - this route will never be defined. Please use /signup instead'
+    })
+};
