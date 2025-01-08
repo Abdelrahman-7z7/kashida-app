@@ -11,9 +11,9 @@ const followSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
-    createdAt:{
+    createdAt: {
         type: Date,
-        default: Date.now
+        default: () => new Date().toISOString(), //ISO 8601 format in UTC
     }
 },{
     toJSON: {virtuals: true},

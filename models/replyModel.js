@@ -11,7 +11,7 @@ const replySchema = new mongoose.Schema({
     },
     createdAt: {
         type: Date,
-        default: Date.now()
+        default: () => new Date().toISOString(), //ISO 8601 format in UTC
     },
     user: {
         type: mongoose.Schema.ObjectId,

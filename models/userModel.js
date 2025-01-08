@@ -66,6 +66,10 @@ const userSchema = new mongoose.Schema({
         default: true,
         select: false
     },
+    createdAt: {
+        type: Date,
+        default: () => new Date().toISOString(), //ISO 8601 format in UTC
+    },
     followers: {
         type: Number,
         default: 0
@@ -105,7 +109,7 @@ const userSchema = new mongoose.Schema({
         },
         required: false
     },
-    emailVerification:{
+    isEmailVerified:{
         type: Boolean,
         default: false
     },
