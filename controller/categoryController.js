@@ -55,15 +55,15 @@ exports.deleteCategory = catchAsync(async (req, res, next)=>{
     
     if(!category) return next(new AppError('no category found with that id', 404));
     
-    if(category.followedImg.length){
+    if(category.followedImg?.length){
         await imageProcess.deleteImagesFromCloudinary(category.followedImg)
     }
     
-    if(category.unfollowedImg.length){
+    if(category.unfollowedImg?.length){
         await imageProcess.deleteImagesFromCloudinary(category.unfollowedImg)
     }
     
-    if(category.logo.length){
+    if(category.logo?.length){
         await imageProcess.deleteImagesFromCloudinary(category.logo)
     }
 
@@ -97,7 +97,10 @@ exports.updateCategory = catchAsync(async (req, res, next)=>{
     }
     
     category.set({
-        name: req.body.name
+        name: req.body.name || category.name,
+        logo: category.logo,
+        followedImg: category.followedImg,
+        unfollowedImg: category.unfollowedImg     
     })
 
     await category.save()
