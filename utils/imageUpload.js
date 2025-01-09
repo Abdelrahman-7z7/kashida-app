@@ -46,6 +46,13 @@ const extractPublicIds = (urls) => {
 
 // Function to delete images from Cloudinary
 exports.deleteImagesFromCloudinary = async (urls) => {
+
+    // Check if the array is empty or invalid
+    if (!urls || !Array.isArray(urls) || urls.length === 0) {
+        console.log('No images to delete.');
+        return; // Exit the function early
+    }
+
     const publicIds = extractPublicIds(urls);
 
     try {
