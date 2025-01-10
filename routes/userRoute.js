@@ -26,6 +26,7 @@ router.get('/search/:searchTerm', userController.searchForUser)
 router.get('/mySpaces', userController.getAllJoinedSpaces)
 router.post('/joinSpace', userController.joinSpace)
 router.delete('/unjoinSpace', userController.unjoinSpace)
+router.get('/:id', userController.getUserById)
 
 router.use(authController.restrictTo('admin')) 
 
@@ -34,7 +35,6 @@ router.route('/')
     .post(userController.createNewUser)
 
 router.route('/:id')
-    .get(userController.getUserById)
     .patch(userController.updateUser)
     .delete(userController.deleteUser)
 
