@@ -11,7 +11,7 @@ router.get('/getLike', likedByController.getLike)
 
 router.post('/likePost', likedByController.likePost)
 router.delete('/unlikePost', likedByController.unlikePost)
-router.get('/likedPosts', likedByController.getAllLikedPosts)
+router.get('/likedPosts/:id', likedByController.getAllLikedPosts)
 
 router.post('/likeComment', likedByController.likeComment)
 router.delete('/unlikeComment', likedByController.unlikeComment)
