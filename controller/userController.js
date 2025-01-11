@@ -243,7 +243,7 @@ exports.cleanUpJoinedSpaces = catchAsync(async (req, res, next)=>{
 })
 
 exports.getUserById = catchAsync(async (req, res, next)=>{
-    const user = await User.findById(req.params.id).select('username name photo bio role followers following posts joinedSpaces')
+    const user = await User.findById(req.params.id).select('username name photo phoneNumber bio role followers following posts joinedSpaces')
 
     if(!user){
         return next(new AppError('User not found', 404))
