@@ -10,8 +10,9 @@ const router = express.Router()
 
 router.post('/signup', authController.signup)
 router.post('/login', authController.login)
-router.post('/forgotPassword', authController.forgotPassword)
-router.post('/resetPassword/:token', authController.resetPassword)
+router.post('/forgotPassword', authController.forgotPassword) //resend code or sending for the first time
+router.post('/verifyCode', authController.verifyPasswordResetCode)
+router.post('/resetPassword', authController.resetPassword)
 
 router.use(authController.protect)
 

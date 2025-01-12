@@ -109,12 +109,12 @@ const userSchema = new mongoose.Schema({
         },
         required: false
     },
-    isEmailVerified:{
+    isVerifiedCode:{
         type: Boolean,
         default: false
     },
-    emailVerificationCode: String,
-    emailVerificationExpires: Date,
+    VerificationCode: String,
+    VerificationExpiresAt: Date,
     pendingEmail: String,
     joinedSpaces:{
         type: [

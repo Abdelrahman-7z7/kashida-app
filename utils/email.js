@@ -92,4 +92,21 @@ module.exports = class Email {
     `;
     await this.send(`New Report: ${reportType}`, htmlContent);
   }
+
+  // Send email with the password reset verification code
+async sendResetPasswordCode(verificationCode) {
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+      <h1>Password Reset Request</h1>
+      <p>Hello ${this.firstName},</p>
+      <p>We received a request to reset your password. Use the following code to reset your password:</p>
+      <h2 style="font-size: 24px;">${verificationCode}</h2>
+      <p>This code will expire in 1 minute.</p>
+      <p>If you did not request a password reset, please ignore this email or contact us if you have concerns.</p>
+      <p>Best regards,<br>The Kashida Team</p>
+    </div>
+  `;
+  await this.send('Password Reset Code', htmlContent);
+}
+
 };

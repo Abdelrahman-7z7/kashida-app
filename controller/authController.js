@@ -5,6 +5,7 @@ const crypto = require('crypto')
 const {promisify} = require('util')
 const Email = require('../utils/email')
 const validator = require('validator')
+const bcrypt = require('bcryptjs')
 
 //import model
 const User = require('../models/userModel')
@@ -153,85 +154,153 @@ exports.restrictTo = (...roles) => {
     }
 }
 
-//resetting password by sending a request to sendEmail message that contains a random token NOT a jsonWebToken
+// //resetting password by sending a request to sendEmail message contains verification code
+// // works as well for "resending verification code"
+// exports.forgotPassword = catchAsync(async (req, res, next) => {
+
+//     // 1) get user passed on the POSTed email
+//     const user = await User.findOne({email: req.body.email})
+    
+//     // 2) verify if the user does exist
+//     if(!user){
+//         return next(new AppError('No user were found!!', 404))
+//     }
+    
+//     // 3) generate verification token
+//     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+//     const verificationCodeExpires = Date.now() + 60 * 1000; // 1 minute
+
+//     // 3) Hash the verification code
+//     const hashedCode = await bcrypt.hash(verificationCode, 12);
+
+//     // 4) Store the code and expiration in the database
+//     user.VerificationCode = hashedCode;
+//     user.VerificationExpiresAt = verificationCodeExpires;
+//     await user.save({ validateBeforeSave: false });
+    
+//     try{
+//         // 5) Send the verification code via email
+//         await new Email(user).sendVerificationCode(verificationCode);
+
+//         // 6) Respond to the client
+//         res.status(200).json({
+//             status: 'success',
+//             message: 'Verification code sent to your email.',
+//         });
+
+//     } catch (err) {
+//         // 10) in the catch block => set the passwordResetToken to undefined
+//         user.VerificationCode = undefined;
+
+//         // 11) set the passwordResetExpires to undefined
+//         user.VerificationExpiresAt = undefined;
+
+//         // 12) await for the save with setting the validateBeforeSave: false option
+//         await user.save({validateBeforeSave: false})
+        
+//         // 13) returning the error
+//         return next(new AppError('There was an error sending the email. Please try again later!!', 500))
+//     }
+// })
+
 exports.forgotPassword = catchAsync(async (req, res, next) => {
-
-    // 1) get user passed on the POSTed email
-    const user = await User.findOne({email: req.body.email}).select('+password')
-    
-    // 2) verify if the user does exist
-    if(!user){
-        return next(new AppError('No user were found!!', 404))
+    // 1) Get user based on POSTed email
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+        return next(new AppError('No user found with this email.', 404));
     }
-    
-    // 3) generate random reset token => by using instance method in the user model
-    const resetToken = user.createPasswordResetToken();
-    
-    // 4) saving the user and giving the option: {validateBeforeSave: false}
-    await user.save({validateBeforeSave: false})
-    
-    // 5) generate the resetURL
-    const resetURL = `${req.protocol}://${req.get('host')}/api/k1/users/resetPassword/${resetToken}`;
 
-    // 6) open try/catch block
-    try{
-        // 7) generate the sendEmail function in the util package
-        // 8) await for the email to sent
-        const resetURL = `${req.protocol}://${req.get('host')}/api/k1/users/resetPassword/${resetToken}`;
-        await new Email(user, resetURL).sendPasswordReset();
+    // 2) Generate verification token
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationCodeExpires = Date.now() + 60 * 1000; // 1 minute
+    console.log('Generated verification code:', verificationCode);
 
+    // 3) Hash the verification code
+    const hashedCode = await bcrypt.hash(verificationCode, 12);
+    console.log('Hashed verification code:', hashedCode);
 
-        // 9) generate the response 
+    // 4) Save the code and expiration to the user
+    user.VerificationCode = hashedCode;
+    user.VerificationExpiresAt = verificationCodeExpires;
+    await user.save({ validateBeforeSave: false });
+
+    // 5) Send the email
+    try {
+        console.log('Attempting to send verification email...');
+        await new Email(user).sendResetPasswordCode(verificationCode);
+        console.log('Verification email sent successfully.');
+
         res.status(200).json({
             status: 'success',
-            message: 'Token Sent to email'
-        })
-
+            message: 'Verification code sent to your email.',
+        });
     } catch (err) {
-        // 10) in the catch block => set the passwordResetToken to undefined
-        user.passwordResetToken = undefined;
+        console.error('Error sending verification email:', err);
 
-        // 11) set the passwordResetExpires to undefined
-        user.passwordResetExpires = undefined;
+        user.VerificationCode = undefined;
+        user.VerificationExpiresAt = undefined;
+        await user.save({ validateBeforeSave: false });
 
-        // 12) await for the save with setting the validateBeforeSave: false option
-        await user.save({validateBeforeSave: false})
-        
-        // 13) returning the error
-        return next(new AppError('There was an error sending the email. Please try again later!!', 500))
+        return next(
+            new AppError('There was an error sending the email. Please try again later.', 500)
+        );
     }
-})
+});
 
+
+//verify password reset code
+exports.verifyPasswordResetCode = catchAsync(async (req, res, next)=>{
+    const {email, verificationCode} = req.body
+
+    //verify the user exists
+    const user = await User.findOne({email})
+    if(!user){
+        return next(new AppError('No user found with this email address', 404))
+    }
+
+    //check if the code is valid
+    const isValidCode = await bcrypt.compare(verificationCode, user.VerificationCode);
+
+    if(!isValidCode || user.VerificationExpiresAt < Date.now()){
+        return next(new AppError('Invalid or expired verification code', 400))
+    }
+
+    user.VerificationCode = undefined;
+    user.VerificationExpiresAt = undefined;
+    user.isValidCode = true;
+
+    await user.save({validateBeforeSave: false});
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Verification code is valid. You may now reset your password.',
+    });
+})
 
 // resetting password
 exports.resetPassword = catchAsync(async (req, res, next) => {
-    // 1) get the token
-    const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex')
-    
-    // 2) get the user by the token
-    const user = await User.findOne({
-        passwordResetToken: hashedToken,
-        passwordResetExpires: {$gt: Date.now()}
-    })
+    const {email, password, passwordConfirm} = req.body;
 
-    // 3) check if the user exists
+    // 1) verify if the user exists
+    const user = await User.findOne({email})
     if(!user){
-        return next(new AppError('Token is invalid or has expired', 400))
+        return next(new AppError('No user found with this email address', 404))
     }
-    
-    // 4) get the user password and password confirm
-    user.password = req.body.password;
-    user.passwordConfirm = req.body.passwordConfirm;
-    
-    // 5) set the passwordResetToken & passwordResetExpires to undefined
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
+    if(user.isValidCode === false){
+        return next(new AppError('Verification code is not been confirmed', 400))
+    }
 
-    // 6) save user
-    await user.save()
+    //update the password
+    user.password = password;
+    user.passwordConfirm = passwordConfirm;
+    user.isValidCode = false;
 
-    // 7) create the token
-    createSendToken(user, 200, res)
+    await user.save();
+
+    res.status(200).json({
+        status: 'success',
+        message: 'the password was updated successfully',
+    });
 })
 
 // updating the logged in user's password without needing to forgot it in the first place
@@ -281,14 +350,123 @@ exports.updateEmail = catchAsync(async (req, res, next) => {
     createSendToken(user, 200, res);
 })
 
-//verifying email
-exports.verifyEmail = catchAsync(async (req, res, next) => {
-    // 1) fetch the user data
-    // 2) check the user Id
-    // 3) throw an error if !user
-    // 4) get the email address 
-    // 5) send an email message with the token involved
-    // 6) check if the token is valid and not expired
-    // 7) if so then we update the email address and set the token and the expiration to undefined
-    // 8) save the user and send the response
-})
+//verifying the email comes in two stages:
+// 1) requesting the verification code
+// 2) verify the code that has been entered
+
+// //update email for the current user
+// exports.updateEmail = catchAsync(async (req, res, next)=>{
+//     const user = req.user
+//     const {newEmail, passwordCurrent} = req.body;
+
+//     //1) check if the current password is correct
+//     if(!(await user.correctPassword(passwordCurrent, user.password))){
+//         return next(new AppError('Incorrect current password', 401))
+//     }
+
+//     //2) validate the new email format
+//     if(!/^\S+@\S+\.\S+$/.test(newEmail)){
+//         return next(new AppError('Please provide a valid email address', 400))
+//     }
+
+//     //3) check if the new email is already in use
+//     const existingUser = await User.findOne({email: newEmail})
+
+//     if(existingUser){
+//         return next(new AppError('Email address already exists', 400))
+//     }
+
+//     //4) Generate a verification code and expiration time
+//     const verificationCode = Math.floor(10000 + Math.random() * 90000).toString();
+//     const emailVerificationExpires = Date.now() + 60 * 1000; // 1 min
+
+//     //5) hash the verification code
+//     const hashedCode = await bcrypt.hash(verificationCode, 12);
+
+//     //6) temporarily store the new email and verification details
+//     user.pendingEmail = newEmail;
+//     user.emailVerificationCode = hashedCode;
+//     user.emailVerificationExpires = emailVerificationExpires;
+
+//     await user.save({validateBeforeSave: false})
+
+//     //7) send the verification email
+//     await new Email(user).sendEmailVerification(verificationCode)
+
+//     //8) send the response
+//     res.status(200).json({
+//         status: 'success',
+//         message: 'A verification code has been sent to your new email.'
+//     })
+// })
+
+// //verify update email
+// exports.verifyUpdatedEmail = catchAsync(async (req, res, next)=>{
+//     const user = req.user
+//     const {verificationCode} = req.body
+
+//     //1) check if there's pending email update
+//     if(!user.pendingEmail){
+//         return next(new AppError('No email update request found.', 400));
+//     }
+
+//     //2) verify the hashed code
+//     const isValidCode = await bcrypt.compare(verificationCode, user.emailVerificationCode)
+
+//     if(!isValidCode){
+//         return next(new AppError('Incorrect verification code', 400))
+//     }
+
+//     //3) check if the code has expired
+//     if(user.emailVerificationExpires < Date.now()){
+//         return next(new AppError('Verification code has expired', 400))
+//     }
+
+//     //4) finalize the email update
+//     user.email = user.pendingEmail
+//     user.pendingEmail = undefined // clear the pending email
+//     user.emailVerificationCode = undefined // clear the verification code
+//     user.emailVerificationExpires = undefined // clear the expiration time
+
+//     await user.save({validateBeforeSave: false})
+
+//     res.status(200).json({
+//         status: 'success',
+//         message: 'Your email has been updated and verified successfully'
+//     })
+// })
+
+
+// //resend the verification code
+// // Resend verification code for updating email
+// exports.resendVerificationCode = catchAsync(async (req, res, next) => {
+//     const user = req.user;
+  
+//     // 1) Check if there's a pending email update
+//     if (!user.pendingEmail) {
+//       return next(new AppError('No email update request found.', 400));
+//     }
+  
+//     // 2) Generate a new verification code and expiration time
+//     const verificationCode = Math.floor(10000 + Math.random() * 90000).toString();
+//     const emailVerificationExpires = Date.now() + 60 * 1000; // 1 min
+  
+//     // 3) Hash the new verification code
+//     const hashedCode = await bcrypt.hash(verificationCode, 12);
+  
+//     // 4) Update the user's email verification fields
+//     user.emailVerificationCode = hashedCode;
+//     user.emailVerificationExpires = emailVerificationExpires;
+  
+//     await user.save({ validateBeforeSave: false });
+  
+//     // 5) Resend the verification email
+//     await new Email(user).sendEmailVerification(verificationCode);
+  
+//     // 6) Send the response
+//     res.status(200).json({
+//       status: 'success',
+//       message: 'A new verification code has been sent to your email.',
+//     });
+// });
+  
