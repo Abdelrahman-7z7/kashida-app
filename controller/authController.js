@@ -154,55 +154,7 @@ exports.restrictTo = (...roles) => {
     }
 }
 
-// //resetting password by sending a request to sendEmail message contains verification code
-// // works as well for "resending verification code"
-// exports.forgotPassword = catchAsync(async (req, res, next) => {
-
-//     // 1) get user passed on the POSTed email
-//     const user = await User.findOne({email: req.body.email})
-    
-//     // 2) verify if the user does exist
-//     if(!user){
-//         return next(new AppError('No user were found!!', 404))
-//     }
-    
-//     // 3) generate verification token
-//     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-//     const verificationCodeExpires = Date.now() + 60 * 1000; // 1 minute
-
-//     // 3) Hash the verification code
-//     const hashedCode = await bcrypt.hash(verificationCode, 12);
-
-//     // 4) Store the code and expiration in the database
-//     user.VerificationCode = hashedCode;
-//     user.VerificationExpiresAt = verificationCodeExpires;
-//     await user.save({ validateBeforeSave: false });
-    
-//     try{
-//         // 5) Send the verification code via email
-//         await new Email(user).sendVerificationCode(verificationCode);
-
-//         // 6) Respond to the client
-//         res.status(200).json({
-//             status: 'success',
-//             message: 'Verification code sent to your email.',
-//         });
-
-//     } catch (err) {
-//         // 10) in the catch block => set the passwordResetToken to undefined
-//         user.VerificationCode = undefined;
-
-//         // 11) set the passwordResetExpires to undefined
-//         user.VerificationExpiresAt = undefined;
-
-//         // 12) await for the save with setting the validateBeforeSave: false option
-//         await user.save({validateBeforeSave: false})
-        
-//         // 13) returning the error
-//         return next(new AppError('There was an error sending the email. Please try again later!!', 500))
-//     }
-// })
-
+// forgetting password handler
 exports.forgotPassword = catchAsync(async (req, res, next) => {
     // 1) Get user based on POSTed email
     const user = await User.findOne({ email: req.body.email });
@@ -213,11 +165,11 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     // 2) Generate verification token
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
     const verificationCodeExpires = Date.now() + 60 * 1000; // 1 minute
-    console.log('Generated verification code:', verificationCode);
+    // console.log('Generated verification code:', verificationCode);
 
     // 3) Hash the verification code
     const hashedCode = await bcrypt.hash(verificationCode, 12);
-    console.log('Hashed verification code:', hashedCode);
+    // console.log('Hashed verification code:', hashedCode);
 
     // 4) Save the code and expiration to the user
     user.VerificationCode = hashedCode;
@@ -226,16 +178,16 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
     // 5) Send the email
     try {
-        console.log('Attempting to send verification email...');
+        // console.log('Attempting to send verification email...');
         await new Email(user).sendResetPasswordCode(verificationCode);
-        console.log('Verification email sent successfully.');
+        // console.log('Verification email sent successfully.');
 
         res.status(200).json({
             status: 'success',
             message: 'Verification code sent to your email.',
         });
     } catch (err) {
-        console.error('Error sending verification email:', err);
+        // console.error('Error sending verification email:', err);
 
         user.VerificationCode = undefined;
         user.VerificationExpiresAt = undefined;
