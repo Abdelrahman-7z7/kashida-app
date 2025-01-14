@@ -6,6 +6,7 @@ const Reply = require('../models/replyModel')
 const catchAsync = require('../utils/catchAsync')
 //helping for testing
 const factory = require('./handlerFactory')
+const mongoose = require('mongoose')
 
 //get likes post
 exports.getLike = catchAsync(async (req, res, next) => {
@@ -18,22 +19,86 @@ exports.getLike = catchAsync(async (req, res, next) => {
     })
 })
 
-//get all posts that the user has liked in a collection using middleware for population
-exports.getAllLikedPosts = catchAsync(async (req, res, next)=>{
-    //get the user id, fetch the user's liked posts
-    const userID = req.params.id
+// //get all posts that the user has liked in a collection using middleware for population
+// exports.getAllLikedPosts = catchAsync(async (req, res, next)=>{
+//     //get the user id, fetch the user's liked posts
+//     const userID = req.params.id
 
-    //fetch all posts that has the user id
-    const likedPosts = await PostLikes.find({userId: userID});
+//     //fetch all posts that has the user id
+//     const likedPosts = await PostLikes.find({userId: userID});
 
-    //send response
+//     //send response
+//     res.status(200).json({
+//         status:'success',
+//         data: {
+//             likedPosts
+//         }
+//     })
+// })
+
+exports.getAllLikedPosts = catchAsync(async (req, res, next) => {
+    const userId = req.params.id; // Target user ID
+    const currentUserId = req.user.id; // Current authenticated user ID
+
+    const likedPostsWithHasLiked = await PostLikes.aggregate([
+        {
+            $match: { userId: new mongoose.Types.ObjectId(userId) },
+        },
+        {
+            $lookup: {
+                from: 'posts',
+                localField: 'postId',
+                foreignField: '_id',
+                as: 'postDetails',
+            },
+        },
+        {
+            $unwind: '$postDetails',
+        },
+        {
+            $lookup: {
+                from: 'postlikes',
+                let: { postId: '$postId' },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ['$postId', '$$postId'] },
+                                    { $eq: ['$userId', new mongoose.Types.ObjectId(currentUserId)] },
+                                ],
+                            },
+                        },
+                    },
+                ],
+                as: 'currentUserLike',
+            },
+        },
+        {
+            $addFields: {
+                hasLiked: {
+                    $cond: {
+                        if: { $eq: [userId, currentUserId] }, // If fetching own liked posts
+                        then: true, // hasLiked is always true
+                        else: { $gt: [{ $size: '$currentUserLike' }, 0] }, // Check if current user liked
+                    },
+                },
+            },
+        },
+        {
+            $replaceRoot: { newRoot: { $mergeObjects: ['$postDetails', { hasLiked: '$hasLiked' }] } },
+        },
+    ]);
+
     res.status(200).json({
-        status:'success',
+        status: 'success',
+        results: likedPostsWithHasLiked.length,
         data: {
-            likedPosts
-        }
-    })
-})
+            posts: likedPostsWithHasLiked,
+        },
+    });
+});
+
 
 //like post
 exports.likePost = catchAsync(async (req, res, next) => {
