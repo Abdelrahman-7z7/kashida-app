@@ -85,6 +85,31 @@ exports.getAllLikedPosts = catchAsync(async (req, res, next) => {
                 },
             },
         },
+        // Additional lookup to populate only specific fields of the user inside the post
+        {
+            $lookup: {
+                from: 'users',
+                let: { userId: '$postDetails.user' }, // Assuming posts have a 'user' field
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: { $eq: ['$_id', '$$userId'] },
+                        },
+                    },
+                    {
+                        $project: {
+                            _id: 1,
+                            username: 1,
+                            photo: 1,
+                        },
+                    },
+                ],
+                as: 'postDetails.user',
+            },
+        },
+        {
+            $unwind: '$postDetails.user',
+        },
         {
             $replaceRoot: { newRoot: { $mergeObjects: ['$postDetails', { hasLiked: '$hasLiked' }] } },
         },
@@ -98,6 +123,8 @@ exports.getAllLikedPosts = catchAsync(async (req, res, next) => {
         },
     });
 });
+
+
 
 
 //like post
