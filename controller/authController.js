@@ -164,7 +164,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
     // 2) Generate verification token
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const verificationCodeExpires = Date.now() + 60 * 1000; // 1 minute
+    const verificationCodeExpires = Date.now() + 2 * 60 * 1000; // 2 minute
     // console.log('Generated verification code:', verificationCode);
 
     // 3) Hash the verification code
