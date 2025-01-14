@@ -50,10 +50,7 @@ const createSendToken = (user, statusCode, res) => {
     // 6) send the response with the user and status code
     res.status(statusCode).json({
         status: 'success',
-        token,
-        data: {
-            user
-        }
+        token
     })
     
 }
