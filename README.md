@@ -174,5 +174,5 @@ postRouter.route('/').get(postController.getAllPosts).post(authController.protec
 
 ## License
 
-[MIT](https://github.com/Abdelrahman-7z7/kashida-app/blob/main/LICENSE)
+[LICENSE](https://github.com/Abdelrahman-7z7/kashida-app/blob/main/LICENSE)
 
